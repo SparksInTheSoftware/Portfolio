@@ -1,0 +1,120 @@
+﻿@page "/"
+
+<style>
+    .hidden
+    {
+        visibility: hidden;
+    }
+
+    .overlay-icon
+    {
+        color: gray;
+    }
+    .overlay-icon:hover
+    {
+        color: white;
+    }
+
+    .l-container
+    {
+        position: absolute;
+        left:0;
+        top:0;
+        width: 100%;
+        height: 100%;
+        background: rgb(0, 0, 0);
+    }
+
+    .l-image
+    {
+        position: absolute;
+        left:0;
+        top:0;
+        width: 100%;
+        height: 100%;
+        object-fit:contain;
+    }
+
+    .l-top
+    {
+        position: absolute;
+        left:0;
+        top: 0;
+        width: 100%;
+    }
+
+    .l-bottom
+    {
+        position: absolute;
+        left:0;
+        bottom: 0;
+        width: 100%;
+    }
+
+    .l-left
+    {
+        position: absolute;
+        top:0;
+        left: 0;
+        height: 100%;
+    }
+
+    .l-right
+    {
+        position: absolute;
+        top:0;
+        right: 0;
+        height: 100%;
+    }
+
+    .l-overlay
+    {
+        background: rgb(0, 0, 0);
+        background: rgba(0, 0, 0, 0.5); /* Black see-through */
+        transition: .5s ease;
+        opacity: 0;
+        font-size: 20px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .l-overlay:hover
+    {
+        opacity: 1;
+    }
+
+    .l-flex-row-reverse
+    {
+        display:flex;
+        flex-direction:row-reverse;
+
+    }
+
+    .l-center-vertical
+    {
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+</style>
+
+<img @ref="imageRef" src="@CurFileName" class="hidden" @onload="OnImageLoaded"/>
+<div @ref="containerDiv" class="l-container" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation tabindex="0">
+    <div @onmousedown="OnMouseDown" @onmousemove="OnMouseMove" @onmouseup="OnMouseUp"
+         @onmousewheel="OnMouseWheel"
+         >
+    <Canvas @ref="canvas" Height="1" Width="1" />
+    </div>
+    <div class="l-overlay l-left">
+        <span class="oi oi-chevron-left overlay-icon l-center-vertical" aria-hidden="true" @onclick="Previous"></span>
+    </div>
+    <div class="l-overlay l-right">
+        <span class="oi oi-chevron-right overlay-icon l-center-vertical" aria-hidden="true" @onclick="Next"></span>
+    </div>
+    <div class="l-overlay l-bottom">
+        <div class="l-flex-row-reverse ">
+            <span class="@fullScreenClass overlay-icon" aria-hidden="true" @onclick="DoFullScreen"> </span>
+        </div>
+    </div>
+</div>

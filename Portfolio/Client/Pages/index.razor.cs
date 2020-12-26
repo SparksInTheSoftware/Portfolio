@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Drawing;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -19,6 +21,7 @@ namespace Portfolio.Client.Pages
     public partial class Index : ComponentBase
         {
         [Inject] IJSRuntime JSRuntime { get; set; }
+        [Inject] HttpClient HttpClient { get; set; }
 
         private ElementReference containerDiv;
         private ElementReference imageRef;
@@ -28,20 +31,18 @@ namespace Portfolio.Client.Pages
 
         private string CurFileName
             {
-            get { return "http://0x151.com/Portfolio/" + this.fileNames[this.iCurFile]; }
+            get
+                {
+                if ((this.fileNames != null) && (this.iCurFile < this.fileNames.Length))
+                    {
+                    return this.fileNames[this.iCurFile];
+                    }
+                return "";
+                }
             }
-        private int iCurFile = 0;
-        private string[] fileNames = {
-            "DSC02662.jpg",
-            "DSC02663.jpg",
-            "DSC02664.jpg",
-            "DSC02673.jpg",
-            "DSC02674.jpg",
-            "DSC02679.jpg",
-            "DSC02686.jpg",
-            "DSC02687.jpg",
-        };
 
+        private int iCurFile = 0;
+        private string[] fileNames;
         private void DoFullScreen()
             {
             string func = this.fullScreen ? "exitFullScreen" : "enterFullScreen";
@@ -51,6 +52,7 @@ namespace Portfolio.Client.Pages
 
             IJSInProcessRuntime js = JSRuntime as IJSInProcessRuntime;
             string outValuesBase64 = js.Invoke<string>(func);
+            CenterImage();
             }
 
         private Canvas2DContext _context;
@@ -59,9 +61,10 @@ namespace Portfolio.Client.Pages
             {
             if (firstRender)
                 {
+                await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<Index>(this));
+                this.fileNames = await HttpClient.GetFromJsonAsync<string[]>("https://www.sparksinthesoftware.com/portfolio/portfolio.json");
                 await this.containerDiv.FocusAsync();
-                CenterImage();
-                await DrawImage();
+                await OnResize();
                 }
             }
 
@@ -83,8 +86,7 @@ namespace Portfolio.Client.Pages
         private Size imageSize = new() { Width = 0, Height = 0 };
         private Size imageSizeZoomed = new() { Width = 0, Height = 0 };
 
-        // imageAnchor is the point in image rect that corresponds to canvasAnchor
-        private Point imageAnchor;
+        // imageAnchorZoomed is the point in image rect that corresponds to canvasAnchor
         private Point imageAnchorZoomed;
 
         private Fraction imageToCanvas;
@@ -172,8 +174,6 @@ namespace Portfolio.Client.Pages
             this.imageSizeZoomed = this.imageSize * this.zoom;
             this.imageDisplayRect = new(origin, this.imageSizeZoomed);
 
-            Console.WriteLine($"imageDisplayRect (after zoom) = {this.imageDisplayRect.ToString()}");
-
             // Shift the image so that its anchor point lines up
             // with the anchor point on the canvas.
             // The anchor points are initially the centers of the image and the canvas,
@@ -184,19 +184,34 @@ namespace Portfolio.Client.Pages
                 Y = this.canvasAnchor.Y - this.imageAnchorZoomed.Y
                 };
             this.imageDisplayRect.Offset(offset);
-            Console.WriteLine($"imageDisplayRect (after offset) = {this.imageDisplayRect.ToString()}");
+
+            // if zoomed image is bigger than canvas, don't keep the image on the canvas
+            if (this.imageSizeZoomed.Width >= this.canvasSize.Width)
+                {
+                if (this.imageDisplayRect.X > 0)
+                    {
+                    this.imageDisplayRect.X = 0;
+                    }
+                else if (this.imageDisplayRect.Right <= this.canvasSize.Width)
+                    {
+                    this.imageDisplayRect.X = -(this.imageDisplayRect.Width - this.canvasSize.Width);
+                    }
+                }
+            if (this.imageSizeZoomed.Height >= this.canvasSize.Height)
+                {
+                if (this.imageDisplayRect.Y > 0)
+                    {
+                    this.imageDisplayRect.Y = 0;
+                    }
+                else if (this.imageDisplayRect.Bottom <= this.canvasSize.Height)
+                    {
+                    this.imageDisplayRect.Y = -(this.imageDisplayRect.Height - this.canvasSize.Height);
+                    }
+                }
             }
 
-        private async Task DrawImage()
+        private async Task DrawCanvas()
             {
-            // Make sure the canvas is the same size as its conainer
-            Size newCanvasSize = await JSRuntime.InvokeAsync<Size>("CanvasResize", this.containerDiv, this.canvas.GetCanvasRef());
-            if ((newCanvasSize.Width != this.canvasSize.Width) || (newCanvasSize.Width != this.canvasSize.Width))
-                {
-                this.canvasSize = new (newCanvasSize.Width, newCanvasSize.Height);
-                RecomputeImageScale();
-                ComputeImageDisplayRect();
-                }
 
             if ((this.imageNativeSize.Width > 0) && (this.imageNativeSize.Height > 0))
                 {
@@ -210,7 +225,6 @@ namespace Portfolio.Client.Pages
                     0, 0, this.imageNativeSize.Width, this.imageNativeSize.Height,
                     this.imageDisplayRect.X, this.imageDisplayRect.Y, this.imageDisplayRect.Width, this.imageDisplayRect.Height);
 
-                Console.WriteLine($"zoom = {this.zoom.ToString()}");
                 await this._context.BeginPathAsync();
                 await this._context.SetStrokeStyleAsync("gray");
                 await this._context.SetLineWidthAsync(3);
@@ -241,25 +255,37 @@ namespace Portfolio.Client.Pages
                     await this._context.StrokeTextAsync($"Canvas Anchor: {this.canvasAnchor.ToString()}", 10, 50);
                     await this._context.StrokeTextAsync($"Display Rect : {this.imageDisplayRect.ToString()}", 10, 75);
                     await this._context.StrokeTextAsync($"Zoom         : {this.zoom.ToString()}", 10, 100);
+                    await this._context.StrokeTextAsync($"Image Load   : {this.imageLoadTime.ToString()}", 10, 125);
 
                     await this._context.EndBatchAsync();
                     }
                 }
             }
 
+        DateTime startImageFetch;
+        TimeSpan imageLoadTime;
         private async Task Next()
             {
-            this.iCurFile++;
-            if (this.iCurFile >= this.fileNames.Length)
-                this.iCurFile = 0;
-            StateHasChanged();
+            if (this.fileNames?.Length > 0)
+                {
+                this.iCurFile++;
+                if (this.iCurFile >= this.fileNames.Length)
+                    this.iCurFile = 0;
+                StateHasChanged();
+                this.startImageFetch = DateTime.Now;
+
+                }
             }
         private async Task Previous()
             {
-            this.iCurFile--;
-            if (this.iCurFile < 0)
-                this.iCurFile = this.fileNames.Length - 1;
-            StateHasChanged();
+            if (this.fileNames?.Length > 0)
+                {
+                this.iCurFile--;
+                if (this.iCurFile < 0)
+                    this.iCurFile = this.fileNames.Length - 1;
+                StateHasChanged();
+                this.startImageFetch = DateTime.Now;
+                }
             }
 
         private async Task OnKeyDown(KeyboardEventArgs args)
@@ -293,7 +319,7 @@ namespace Portfolio.Client.Pages
                         ZoomPlus(-25);
                         break;
                     }
-                await DrawImage();
+                await DrawCanvas();
                 }
             else if (args.ShiftKey)
                 {
@@ -310,12 +336,12 @@ namespace Portfolio.Client.Pages
 
                     case "d":
                         this.displayInfo = !this.displayInfo;
-                        await DrawImage();
+                        await DrawCanvas();
                         break;
 
                     case "a":
                         this.displayAnchor = !this.displayAnchor;
-                        await DrawImage();
+                        await DrawCanvas();
                         break;
 
                     case "f":
@@ -355,7 +381,7 @@ namespace Portfolio.Client.Pages
 
         private async Task OnMouseUp(MouseEventArgs args)
             {
-            await DrawImage();
+            await DrawCanvas();
             }
 
         private async Task OnMouseMove(MouseEventArgs args)
@@ -365,7 +391,7 @@ namespace Portfolio.Client.Pages
                 SetAnchor((int) args.OffsetX, (int) args.OffsetY, false);
 
                 //TODO: keep image on canvas
-                await DrawImage();
+                await DrawCanvas();
                 }
             }
 
@@ -374,7 +400,7 @@ namespace Portfolio.Client.Pages
             ZoomPlus((int) -args.DeltaY);
             SetAnchor((int)args.OffsetX, (int)args.OffsetY, true);
 
-            await DrawImage();
+            await DrawCanvas();
             }
 
         private void RecomputeImageScale()
@@ -382,8 +408,8 @@ namespace Portfolio.Client.Pages
             if ((this.imageNativeSize.Width == 0) || (this.canvasSize.Width == 0))
                 return;
 
-            double imageRatio = this.imageNativeSize.Height / this.imageNativeSize.Width;
-            double canvasRatio = this.canvasSize.Height / this.canvasSize.Width;
+            double imageRatio = ((float) this.imageNativeSize.Height) / ((float) this.imageNativeSize.Width);
+            double canvasRatio = ((float) this.canvasSize.Height) / ((float) this.canvasSize.Width);
 
             if (imageRatio < canvasRatio)
                 {
@@ -409,26 +435,37 @@ namespace Portfolio.Client.Pages
 
         private async Task OnImageLoaded()
             {
+            DateTime finish = DateTime.Now;
+            this.imageLoadTime = finish - this.startImageFetch;
+
             this.imageNativeSize = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRef); 
             RecomputeImageScale();
             ZoomTo(100);
             CenterImage();
             ComputeImageDisplayRect();
-            await DrawImage();
+            await DrawCanvas();
+            }
+
+        [JSInvokable]
+        public async Task OnResize()
+            {
+            // Make sure the canvas is the same size as its conainer
+            Size newCanvasSize = await JSRuntime.InvokeAsync<Size>("ResizeCanvas", this.containerDiv, this.canvas.GetCanvasRef());
+            if ((newCanvasSize.Width != this.canvasSize.Width) || (newCanvasSize.Width != this.canvasSize.Width))
+                {
+                this.canvasSize = newCanvasSize;
+                RecomputeImageScale();
+                if (this.zoom.numerator == 100)
+                    {
+                    CenterImage();
+                    }
+                ComputeImageDisplayRect();
+
+                this.fullScreen = await JSRuntime.InvokeAsync<bool>("IsFullScreen");
+                await DrawCanvas();
+                }
             }
         }
-    public class BoundingClientRect
-        {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public double Top { get; set; }
-        public double Right { get; set; }
-        public double Bottom { get; set; }
-        public double Left { get; set; }
-        }
-
     public struct Fraction
         {
         public int numerator;
@@ -475,6 +512,4 @@ namespace Portfolio.Client.Pages
             return ((double)f.numerator) / ((double)f.denominator);
             }
         }
-    
-    
     }

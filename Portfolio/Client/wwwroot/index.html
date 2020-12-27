@@ -50,6 +50,12 @@
             return { Width: img.naturalWidth, Height: img.naturalHeight };
         }
 
+        function PrefetchImage(src)
+        {
+            var img = new Image();
+            img.src = src;
+        }
+
         function IsFullScreen()
         {
             return document.fullscreenElement != null;

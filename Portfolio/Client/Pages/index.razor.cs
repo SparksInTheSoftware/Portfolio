@@ -274,6 +274,9 @@ namespace Portfolio.Client.Pages
                 StateHasChanged();
                 this.startImageFetch = DateTime.Now;
 
+                // Prefetch the next image while the current one is being viewed.
+                if (this.iCurFile + 1 < this.fileNames.Length)
+                    await JSRuntime.InvokeVoidAsync("PrefetchImage", this.fileNames[this.iCurFile + 1]);
                 }
             }
         private async Task Previous()

@@ -82,87 +82,37 @@ namespace Portfolio.Client.Pages
         // This reflects any zooming or moving of the image.
         private Rectangle imageDisplayRect;
 
-        // imageSize is in canvas co-ordinate space
-        private Size imageSize = new() { Width = 0, Height = 0 };
         private Size imageSizeZoomed = new() { Width = 0, Height = 0 };
 
-        // imageAnchorZoomed is the point in image rect that corresponds to canvasAnchor
-        private Point imageAnchorZoomed;
+        // imageAnchor is the point in image rect that corresponds to canvasAnchor
+        private Point imageAnchor;
 
-        private Fraction imageToCanvas;
-
-        private Fraction zoom = new(100, 100);
+        private double zoom = 1.0; // 100%
+        private double minZoom;
         private bool displayInfo = false;
         private bool displayAnchor = false;
 
-        private Point ImageToCanvas(Point imagePoint)
-            {
-            return new Point()
-                {
-                X = imagePoint.X * this.imageToCanvas,
-                Y = imagePoint.Y * this.imageToCanvas
-                };
-            }
-
-        private Size ImageToCanvas(Size imageSize)
-            {
-            return new Size()
-                {
-                Width = imageSize.Width * this.imageToCanvas,
-                Height = imageSize.Height * this.imageToCanvas
-                };
-            }
-
-        private Rectangle ImageToCanvas(Rectangle imageRect)
-            {
-            return new Rectangle()
-                {
-                X = imageRect.X * this.imageToCanvas,
-                Y = imageRect.Y * this.imageToCanvas,
-                Width = imageRect.Width * this.imageToCanvas,
-                Height = imageRect.Height * this.imageToCanvas
-                };
-            }
-
-        private Point CanvasToImage(Point canvasPoint)
-            {
-            return new Point()
-                {
-                X = canvasPoint.X / this.imageToCanvas,
-                Y = canvasPoint.Y / this.imageToCanvas
-                };
-            }
-
-        private Rectangle CanvasToImage(Rectangle canvasRect)
-            {
-            return new Rectangle()
-                {
-                X = canvasRect.X / this.imageToCanvas,
-                Y = canvasRect.Y / this.imageToCanvas,
-                Width = canvasRect.Width / this.imageToCanvas,
-                Height = canvasRect.Height / this.imageToCanvas
-                };
-            }
 
         private void ZoomPlus(int delta)
             {
-            ZoomTo(this.zoom.numerator + delta);
+            ZoomTo(this.zoom + ((double) delta / 100.0));
             }
-        private void ZoomTo(int value)
+
+        private void ZoomBy(double scale)
             {
-            Fraction prevZoom = this.zoom;
-            if (value < 100)
-                value = 100;
-            else if (value > 3200)
-                value = 3200;
+            ZoomTo(this.zoom * scale);
 
-            this.zoom.numerator = value;
+            }
+        private void ZoomTo(double percent)
+            {
+            double prevZoom = this.zoom;
+            if (percent < this.minZoom)
+                percent = this.minZoom;
 
-            // this.zoom.denominator and prevZoom.denominator are the same,
-            // so the unzoom the zoom operation can be performed with just the numerators.
-            // This prevents rounding to nearest 100 caused by first dividing by 100 and then multiplying by it.
-            this.imageAnchorZoomed.X = (this.imageAnchorZoomed.X * this.zoom.numerator) / prevZoom.numerator;
-            this.imageAnchorZoomed.Y = (this.imageAnchorZoomed.Y * this.zoom.numerator) / prevZoom.numerator;
+            this.zoom = percent;
+
+            this.imageAnchor.X = (int) (((double) this.imageAnchor.X * this.zoom) /  prevZoom);
+            this.imageAnchor.Y = (int) (((double) this.imageAnchor.Y * this.zoom) / prevZoom);
             ComputeImageDisplayRect();
             }
 
@@ -171,7 +121,8 @@ namespace Portfolio.Client.Pages
             // Figure out where the image should be in canvas co-ordinates
             //     1. Scale the image rect
             //     2. Line up the anchor points
-            this.imageSizeZoomed = this.imageSize * this.zoom;
+            this.imageSizeZoomed.Width = (int) ((double) this.imageNativeSize.Width * this.zoom);
+            this.imageSizeZoomed.Height = (int) ((double) this.imageNativeSize.Height * this.zoom);
             this.imageDisplayRect = new(origin, this.imageSizeZoomed);
 
             // Shift the image so that its anchor point lines up
@@ -180,8 +131,8 @@ namespace Portfolio.Client.Pages
             // but the anchor point changes to the mouse position when dragging and zooming.
             Point offset = new()
                 {
-                X = this.canvasAnchor.X - this.imageAnchorZoomed.X,
-                Y = this.canvasAnchor.Y - this.imageAnchorZoomed.Y
+                X = this.canvasAnchor.X - this.imageAnchor.X,
+                Y = this.canvasAnchor.Y - this.imageAnchor.Y
                 };
             this.imageDisplayRect.Offset(offset);
 
@@ -251,7 +202,7 @@ namespace Portfolio.Client.Pages
                     await this._context.SetStrokeStyleAsync("white");
                     await this._context.SetLineWidthAsync(1);
                     await this._context.SetFontAsync("lighter 16px menu");
-                    await this._context.StrokeTextAsync($"Image Anchor : {this.imageAnchorZoomed.ToString()}", 10, 25);
+                    await this._context.StrokeTextAsync($"Image Anchor : {this.imageAnchor.ToString()}", 10, 25);
                     await this._context.StrokeTextAsync($"Canvas Anchor: {this.canvasAnchor.ToString()}", 10, 50);
                     await this._context.StrokeTextAsync($"Display Rect : {this.imageDisplayRect.ToString()}", 10, 75);
                     await this._context.StrokeTextAsync($"Zoom         : {this.zoom.ToString()}", 10, 100);
@@ -301,25 +252,22 @@ namespace Portfolio.Client.Pages
                         return;
 
                     case "1":
-                        ZoomTo(100 / this.imageToCanvas);
-                        RecomputeImageScale();
+                        ZoomTo(1.00); // 100%
                         ComputeImageDisplayRect();
                         break;
 
                     case "0":
-                        ZoomTo(100);
-                        RecomputeImageScale();
-                        CenterImage();
+                        FitImageToCanvas();
                         ComputeImageDisplayRect();
                         break;
 
                     case "+":
                     case "=":
-                        ZoomPlus(25);
+                        ZoomBy(2.0);
                         break;
 
                     case "-":
-                        ZoomPlus(-25);
+                        ZoomBy(0.5);
                         break;
                     }
                 await DrawCanvas();
@@ -369,7 +317,7 @@ namespace Portfolio.Client.Pages
                 // imageAnchor is relative to the zoomed location in canvas co-ordinates
                 // newAnchor is relative to (0,0) in canvas co-ordinates.
                 // So translate newAnchor to offset in image.
-                this.imageAnchorZoomed = newAnchor - (Size) this.imageDisplayRect.Location;
+                this.imageAnchor = newAnchor - (Size) this.imageDisplayRect.Location;
                 }
 
             this.canvasAnchor = newAnchor;
@@ -406,32 +354,34 @@ namespace Portfolio.Client.Pages
             await DrawCanvas();
             }
 
-        private void RecomputeImageScale()
+        private void FitImageToCanvas()
             {
             if ((this.imageNativeSize.Width == 0) || (this.canvasSize.Width == 0))
                 return;
 
-            double imageRatio = ((float) this.imageNativeSize.Height) / ((float) this.imageNativeSize.Width);
-            double canvasRatio = ((float) this.canvasSize.Height) / ((float) this.canvasSize.Width);
+            double imageRatio = ((double) this.imageNativeSize.Height) / ((double) this.imageNativeSize.Width);
+            double canvasRatio = ((double) this.canvasSize.Height) / ((double) this.canvasSize.Width);
 
             if (imageRatio < canvasRatio)
                 {
                 // The whole image will fit on the canvas with the width filled
-                this.imageToCanvas = new Fraction(this.canvasSize.Width, this.imageNativeSize.Width);
+                this.zoom = ((double)this.canvasSize.Width) / ((double)this.imageNativeSize.Width);
                 }
             else
                 {
                 // The whole image will fit on the canvas with the height filled
-                this.imageToCanvas = new Fraction(this.canvasSize.Height, this.imageNativeSize.Height);
+                this.zoom = ((double)this.canvasSize.Height) / ((double)this.imageNativeSize.Height);
                 }
 
-            this.imageSize = ImageToCanvas(this.imageNativeSize);
-            this.imageSizeZoomed = this.imageSize * this.zoom;
+            this.minZoom = this.zoom + 0; //TODO: need copy operator
+            this.imageSizeZoomed.Width = (int) ((double) this.imageNativeSize.Width * this.zoom);
+            this.imageSizeZoomed.Height = (int) ((double) this.imageNativeSize.Height * this.zoom);
+            CenterImage();
             }
         private void CenterImage()
             {
-            this.imageAnchorZoomed.X = this.imageSizeZoomed.Width / 2;
-            this.imageAnchorZoomed.Y = this.imageSizeZoomed.Height / 2;
+            this.imageAnchor.X = this.imageSizeZoomed.Width / 2;
+            this.imageAnchor.Y = this.imageSizeZoomed.Height / 2;
             this.canvasAnchor.X = this.canvasSize.Width / 2;
             this.canvasAnchor.Y = this.canvasSize.Height / 2;
             }
@@ -441,10 +391,8 @@ namespace Portfolio.Client.Pages
             DateTime finish = DateTime.Now;
             this.imageLoadTime = finish - this.startImageFetch;
 
-            this.imageNativeSize = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRef); 
-            RecomputeImageScale();
-            ZoomTo(100);
-            CenterImage();
+            this.imageNativeSize = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRef);
+            FitImageToCanvas();
             ComputeImageDisplayRect();
             await DrawCanvas();
             }
@@ -457,10 +405,9 @@ namespace Portfolio.Client.Pages
             if ((newCanvasSize.Width != this.canvasSize.Width) || (newCanvasSize.Width != this.canvasSize.Width))
                 {
                 this.canvasSize = newCanvasSize;
-                RecomputeImageScale();
-                if (this.zoom.numerator == 100)
+                if (this.zoom == this.minZoom)
                     {
-                    CenterImage();
+                    FitImageToCanvas();
                     }
                 ComputeImageDisplayRect();
 

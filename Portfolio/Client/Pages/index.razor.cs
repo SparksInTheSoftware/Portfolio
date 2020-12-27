@@ -341,7 +341,6 @@ namespace Portfolio.Client.Pages
                 {
                 SetAnchor((int) args.OffsetX, (int) args.OffsetY, false);
 
-                //TODO: keep image on canvas
                 await DrawCanvas();
                 }
             }
@@ -373,7 +372,7 @@ namespace Portfolio.Client.Pages
                 this.zoom = ((double)this.canvasSize.Height) / ((double)this.imageNativeSize.Height);
                 }
 
-            this.minZoom = this.zoom + 0; //TODO: need copy operator
+            this.minZoom = this.zoom;
             this.imageSizeZoomed.Width = (int) ((double) this.imageNativeSize.Width * this.zoom);
             this.imageSizeZoomed.Height = (int) ((double) this.imageNativeSize.Height * this.zoom);
             CenterImage();

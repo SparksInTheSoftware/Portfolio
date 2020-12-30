@@ -5,8 +5,10 @@ using System.Drawing;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Schema;
 using Blazor.Extensions;
@@ -15,6 +17,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Portfolio.Client.Shared;
+using System.Threading;
 
 namespace Portfolio.Client.Pages
     {
@@ -33,16 +36,22 @@ namespace Portfolio.Client.Pages
             {
             get
                 {
-                if ((this.fileNames != null) && (this.iCurFile < this.fileNames.Length))
+                if ((this.imageInfos != null) && (this.currentImageIndex < this.imageInfos.Length))
                     {
-                    return this.fileNames[this.iCurFile];
+                    return this.imageInfos[this.currentImageIndex].Source;
                     }
                 return "";
                 }
             }
 
-        private int iCurFile = 0;
-        private string[] fileNames;
+
+        private ImageInfo[] imageInfos;
+        private int currentImageIndex = 0;
+
+        private KeyFrame[] keyFrames;
+        private int keyFrameCount = 0;
+        private int currentKeyFrameIndex = -1;
+        private const int fps = 60;
         private void DoFullScreen()
             {
             string func = this.fullScreen ? "exitFullScreen" : "enterFullScreen";
@@ -56,13 +65,12 @@ namespace Portfolio.Client.Pages
             }
 
         private Canvas2DContext _context;
-
         protected override async Task OnAfterRenderAsync(bool firstRender)
             {
             if (firstRender)
                 {
                 await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<Index>(this));
-                this.fileNames = await HttpClient.GetFromJsonAsync<string[]>("https://www.sparksinthesoftware.com/portfolio/portfolio.json");
+                this.imageInfos = await HttpClient.GetFromJsonAsync<ImageInfo[]>("portfolio.json");
                 await this.containerDiv.FocusAsync();
                 await OnResize();
                 }
@@ -115,7 +123,6 @@ namespace Portfolio.Client.Pages
             this.imageAnchor.Y = (int) (((double) this.imageAnchor.Y * this.zoom) / prevZoom);
             ComputeImageDisplayRect();
             }
-
         private void ComputeImageDisplayRect()
             {
             // Figure out where the image should be in canvas co-ordinates
@@ -163,7 +170,6 @@ namespace Portfolio.Client.Pages
 
         private async Task DrawCanvas()
             {
-
             if ((this.imageNativeSize.Width > 0) && (this.imageNativeSize.Height > 0))
                 {
 
@@ -202,11 +208,23 @@ namespace Portfolio.Client.Pages
                     await this._context.SetStrokeStyleAsync("white");
                     await this._context.SetLineWidthAsync(1);
                     await this._context.SetFontAsync("lighter 16px menu");
-                    await this._context.StrokeTextAsync($"Image Anchor : {this.imageAnchor.ToString()}", 10, 25);
-                    await this._context.StrokeTextAsync($"Canvas Anchor: {this.canvasAnchor.ToString()}", 10, 50);
-                    await this._context.StrokeTextAsync($"Display Rect : {this.imageDisplayRect.ToString()}", 10, 75);
-                    await this._context.StrokeTextAsync($"Zoom         : {this.zoom.ToString()}", 10, 100);
-                    await this._context.StrokeTextAsync($"Image Load   : {this.imageLoadTime.ToString()}", 10, 125);
+                    int x = 10;
+                    int line = 1;
+                    int lineHeight = 25;
+                    await this._context.StrokeTextAsync($"Zoom         : {this.zoom.ToString()}", x, lineHeight*line++);
+                    await this._context.StrokeTextAsync($"Canvas Size: {this.canvasSize.ToString()}", x, lineHeight*line++);
+                    await this._context.StrokeTextAsync($"Canvas Anchor: {this.canvasAnchor.ToString()}", x, lineHeight*line++);
+                    await this._context.StrokeTextAsync($"Image Native Size : {this.imageNativeSize.ToString()}", x, lineHeight*line++);
+                    await this._context.StrokeTextAsync($"Image Size Zoomed : {this.imageSizeZoomed.ToString()}", x, lineHeight*line++);
+                    await this._context.StrokeTextAsync($"Image Anchor : {this.imageAnchor.ToString()}", x, lineHeight*line++);
+                    await this._context.StrokeTextAsync($"Display Rect : {this.imageDisplayRect.ToString()}", x, lineHeight*line++);
+                    await this._context.StrokeTextAsync($"Image Load   : {this.imageLoadTime.ToString()}", x, lineHeight*line++);
+                    await this._context.StrokeTextAsync($"Image Index   : {this.currentImageIndex.ToString()}", x, lineHeight*line++);
+                    await this._context.StrokeTextAsync($"Frame Number   : {this.currentKeyFrameIndex.ToString()}", x, lineHeight*line++);
+                    if (this.currentKeyFrameIndex < this.keyFrameCount)
+                        {
+                        await this._context.StrokeTextAsync($"Frame Rectangle   : {this.keyFrames[this.currentKeyFrameIndex].Rectangle.ToString()}", x, lineHeight*line++);
+                        }
 
                     await this._context.EndBatchAsync();
                     }
@@ -217,26 +235,26 @@ namespace Portfolio.Client.Pages
         TimeSpan imageLoadTime;
         private async Task Next()
             {
-            if (this.fileNames?.Length > 0)
+            if (this.imageInfos?.Length > 0)
                 {
-                this.iCurFile++;
-                if (this.iCurFile >= this.fileNames.Length)
-                    this.iCurFile = 0;
+                this.currentImageIndex++;
+                if (this.currentImageIndex >= this.imageInfos.Length)
+                    this.currentImageIndex = 0;
                 StateHasChanged();
                 this.startImageFetch = DateTime.Now;
 
                 // Prefetch the next image while the current one is being viewed.
-                if (this.iCurFile + 1 < this.fileNames.Length)
-                    await JSRuntime.InvokeVoidAsync("PrefetchImage", this.fileNames[this.iCurFile + 1]);
+                if (this.currentImageIndex + 1 < this.imageInfos.Length)
+                    await JSRuntime.InvokeVoidAsync("PrefetchImage", this.imageInfos[this.currentImageIndex + 1].Source);
                 }
             }
         private async Task Previous()
             {
-            if (this.fileNames?.Length > 0)
+            if (this.imageInfos?.Length > 0)
                 {
-                this.iCurFile--;
-                if (this.iCurFile < 0)
-                    this.iCurFile = this.fileNames.Length - 1;
+                this.currentImageIndex--;
+                if (this.currentImageIndex < 0)
+                    this.currentImageIndex = this.imageInfos.Length - 1;
                 StateHasChanged();
                 this.startImageFetch = DateTime.Now;
                 }
@@ -253,12 +271,10 @@ namespace Portfolio.Client.Pages
 
                     case "1":
                         ZoomTo(1.00); // 100%
-                        ComputeImageDisplayRect();
                         break;
 
                     case "0":
                         FitImageToCanvas();
-                        ComputeImageDisplayRect();
                         break;
 
                     case "+":
@@ -268,6 +284,10 @@ namespace Portfolio.Client.Pages
 
                     case "-":
                         ZoomBy(0.5);
+                        break;
+
+                    case "c":
+                        CopyImageInfo();
                         break;
                     }
                 await DrawCanvas();
@@ -305,8 +325,219 @@ namespace Portfolio.Client.Pages
                     case "ArrowRight":
                         await Next();
                         break;
+
+                    case "0":
+                    case "1":
+                    case "2":
+                    case "3":
+                    case "4":
+                    case "5":
+                    case "6":
+                    case "7":
+                    case "8":
+                    case "9":
+                        AddKeyFrame(args.Key[0] - '0');
+                        break;
+                    case "[":
+                        await StepFrame(-1);
+                        break;
+                    case "]":
+                        await StepFrame(1);
+                        break;
+
+                    case "p":
+                        PlayKeyFrames();
+                        break;
                     }
                 }
+            }
+
+        Timer timer;
+        private void PlayKeyFrames()
+            {
+            int millis = 1000 / fps;
+            this.currentKeyFrameIndex = 0;
+            this.timer = new Timer(TimerTick, null, millis, millis);
+            }
+
+        private void TimerTick(object state)
+            {
+            InvokeAsync(async () =>
+                {
+                if (!(await StepFrame(1)))
+                    {
+                    // All done... turn off the timer
+                    if (this.timer != null)
+                        {
+                        this.timer.Dispose();
+                        this.timer = null;
+                        }
+                    }
+
+                });
+            }
+        private void AddKeyFrame(int iFrame)
+            {
+            this.keyFrames = null; // Will need to do InfillKeyFrames() again.
+            this.keyFrameCount = 0;
+
+            ImageInfo curImageInfo = this.imageInfos[this.currentImageIndex];
+            curImageInfo.KeyFrameCanvasSize = this.canvasSize;
+
+            Rectangle rectangle = this.imageDisplayRect;
+
+            KeyFrame keyFrame;
+
+            // All the frames between the current last frame and iFrame are filled with the current rectangle.
+            while (iFrame >= curImageInfo.KeyFrames.Count)
+                {
+                int newIndex = curImageInfo.KeyFrames.Count;
+                keyFrame = new KeyFrame()
+                    {
+                    Rectangle = rectangle,
+                    FrameNumber = fps * newIndex
+                    };
+                curImageInfo.KeyFrames.Add(keyFrame);
+                }
+            keyFrame = curImageInfo.KeyFrames[iFrame];
+            keyFrame.Rectangle = rectangle;
+            keyFrame.FrameNumber = fps * iFrame;
+            }
+        private async Task<bool> StepFrame(int increment)
+            {
+            if (this.keyFrames == null)
+                {
+                GenerateKeyFrames();
+                }
+
+            this.currentKeyFrameIndex += increment;
+
+            if (this.currentKeyFrameIndex > this.keyFrameCount)
+                {
+                this.currentKeyFrameIndex = this.keyFrameCount -1;
+                }
+            else if (this.currentKeyFrameIndex < 0)
+                {
+                this.currentKeyFrameIndex = 0;
+                }
+
+            if (this.currentKeyFrameIndex < this.keyFrameCount) // Could be no keyframes
+                {
+                this.imageDisplayRect = this.keyFrames[this.currentKeyFrameIndex].Rectangle;
+                await DrawCanvas();
+                return true;
+                }
+
+            return false;
+            }
+
+        private void GenerateKeyFrames()
+            {
+            ImageInfo curImageInfo = this.imageInfos[this.currentImageIndex];
+            this.keyFrameCount = 0;
+            this.currentKeyFrameIndex = -1;
+            this.keyFrames = null;
+            double scale = 1.0;
+
+            if (curImageInfo.KeyFrames.Count > 0)
+                {
+                if (this.canvasSize != curImageInfo.KeyFrameCanvasSize)
+                    {
+                    double widthScale = ((double)this.canvasSize.Width) / curImageInfo.KeyFrameCanvasSize.Width;
+                    double heightScale = ((double) this.canvasSize.Height) / curImageInfo.KeyFrameCanvasSize.Height;
+
+                    // Pick the scale that's closest to 1.0
+                    double widthDistance = Math.Abs(1.0 - widthScale);
+                    double heightDistance = Math.Abs(1.0 - heightScale);
+                    scale = (widthDistance < heightDistance) ? widthScale : heightScale;
+                    }
+
+                int maxFrameNumber = 0;
+                foreach (KeyFrame keyFrame in curImageInfo.KeyFrames)
+                    {
+                    if (keyFrame.FrameNumber > maxFrameNumber)
+                        {
+                        maxFrameNumber = keyFrame.FrameNumber;
+                        }
+                    }
+
+                this.keyFrameCount = maxFrameNumber + 1;  // Start counting frames at zero
+                this.keyFrames = new KeyFrame[this.keyFrameCount];
+                KeyFrame previousKeyFrame = null;
+                foreach (KeyFrame keyFrame in curImageInfo.KeyFrames)
+                    {
+                    KeyFrame scaledKeyFrame = Scale(keyFrame, scale);
+                    if (previousKeyFrame != null)
+                        {
+                        InfillKeyFrames(previousKeyFrame, scaledKeyFrame);
+                        }
+                    previousKeyFrame = scaledKeyFrame;
+                    }
+                }
+            }
+        private int Scale(int value, double scale)
+            {
+            if (scale == 1.0)
+                return value;
+
+            return (int)((double)value * scale);
+            }
+        private Rectangle Scale(Rectangle rect, double scale)
+            {
+            return new()
+                {
+                X = Scale(rect.X, scale),
+                Y = Scale(rect.Y, scale),
+                Width = Scale(rect.Width, scale),
+                Height = Scale(rect.Height, scale)
+                };
+            }
+
+        private KeyFrame Scale(KeyFrame keyFrame, double scale)
+            {
+            return new()
+                {
+                FrameNumber = keyFrame.FrameNumber,
+                Rectangle = Scale(keyFrame.Rectangle, scale)
+                };
+            }
+        private void InfillKeyFrames(KeyFrame fromKeyFrame, KeyFrame toKeyFrame)
+            {
+            int stepCount = (toKeyFrame.FrameNumber - fromKeyFrame.FrameNumber) - 1;
+
+            this.keyFrames[fromKeyFrame.FrameNumber] = fromKeyFrame;
+            this.keyFrames[toKeyFrame.FrameNumber] = toKeyFrame;
+            double xStep = ((double) (toKeyFrame.Rectangle.X - fromKeyFrame.Rectangle.X)) / stepCount;
+            double widthStep = ((double) (toKeyFrame.Rectangle.Width - fromKeyFrame.Rectangle.Width)) / stepCount;
+            double yStep = ((double) (toKeyFrame.Rectangle.Y - fromKeyFrame.Rectangle.Y)) / stepCount;
+            double heightStep = ((double) (toKeyFrame.Rectangle.Height - fromKeyFrame.Rectangle.Height)) / stepCount;
+
+            Rectangle baseRectangle = fromKeyFrame.Rectangle;
+
+            for (int step = 1; step <= stepCount; step++)
+                {
+                int frameNumber = fromKeyFrame.FrameNumber + step;
+                this.keyFrames[frameNumber] = new()
+                    {
+                    FrameNumber = frameNumber,
+                    Rectangle = new()
+                        {
+                        X = baseRectangle.X + (int) ((double) step * xStep),
+                        Y = baseRectangle.Y + (int) ((double) step * yStep),
+                        Width = baseRectangle.Width + (int) ((double) step * widthStep),
+                        Height = baseRectangle.Height + (int) ((double) step * heightStep)
+                        }
+                    };
+                }
+            }
+
+        private void CopyImageInfo()
+            {
+
+            JsonSerializerOptions opts = new() { WriteIndented = true };
+            String s = JsonSerializer.Serialize<ImageInfo[]>(this.imageInfos, opts);
+            Console.WriteLine("ImageInfos:");
+            Console.WriteLine(s);
             }
 
         private void SetAnchor(int x, int y, bool setImageAnchor)
@@ -352,10 +583,22 @@ namespace Portfolio.Client.Pages
 
             await DrawCanvas();
             }
-
         private void FitImageToCanvas()
             {
-            if ((this.imageNativeSize.Width == 0) || (this.canvasSize.Width == 0))
+            Rectangle rectangle = new()
+                {
+                X = 0,
+                Y = 0,
+                Width = this.imageNativeSize.Width,
+                Height = this.imageNativeSize.Height
+                };
+
+            FitImageRectangleToCanvas(rectangle);
+            }
+
+        private void FitImageRectangleToCanvas(Rectangle rectangle)
+            {
+            if ((rectangle.Width == 0) || (rectangle.Width == 0))
                 return;
 
             double imageRatio = ((double) this.imageNativeSize.Height) / ((double) this.imageNativeSize.Width);
@@ -363,26 +606,48 @@ namespace Portfolio.Client.Pages
 
             if (imageRatio < canvasRatio)
                 {
-                // The whole image will fit on the canvas with the width filled
-                this.zoom = ((double)this.canvasSize.Width) / ((double)this.imageNativeSize.Width);
+                // The whole rectangle will fit on the canvas with the width filled
+                this.zoom = ((double)this.canvasSize.Width) / ((double)rectangle.Width);
                 }
             else
                 {
                 // The whole image will fit on the canvas with the height filled
-                this.zoom = ((double)this.canvasSize.Height) / ((double)this.imageNativeSize.Height);
+                this.zoom = ((double)this.canvasSize.Height) / ((double)rectangle.Height);
                 }
 
             this.minZoom = this.zoom;
             this.imageSizeZoomed.Width = (int) ((double) this.imageNativeSize.Width * this.zoom);
             this.imageSizeZoomed.Height = (int) ((double) this.imageNativeSize.Height * this.zoom);
-            CenterImage();
+
+            Rectangle rectangleZoomed = new()
+                {
+                X = (int) ((double) rectangle.X * this.zoom),
+                Y = (int) ((double) rectangle.Y * this.zoom),
+                Width = (int) ((double) rectangle.Width * this.zoom),
+                Height = (int) ((double) rectangle.Height * this.zoom)
+                };
+
+            CenterRectangle(rectangleZoomed);
             }
         private void CenterImage()
             {
-            this.imageAnchor.X = this.imageSizeZoomed.Width / 2;
-            this.imageAnchor.Y = this.imageSizeZoomed.Height / 2;
+            Rectangle rectangle = new()
+                {
+                X = 0,
+                Y = 0,
+                Width = this.imageSizeZoomed.Width,
+                Height = this.imageSizeZoomed.Height
+                };
+
+            CenterRectangle(rectangle);
+            }
+        private void CenterRectangle(Rectangle rectangle)
+            {
+            this.imageAnchor.X = rectangle.X + rectangle.Width / 2;
+            this.imageAnchor.Y = rectangle.Y + rectangle.Height / 2;
             this.canvasAnchor.X = this.canvasSize.Width / 2;
             this.canvasAnchor.Y = this.canvasSize.Height / 2;
+            ComputeImageDisplayRect();
             }
 
         private async Task OnImageLoaded()
@@ -391,7 +656,15 @@ namespace Portfolio.Client.Pages
             this.imageLoadTime = finish - this.startImageFetch;
 
             this.imageNativeSize = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRef);
-            FitImageToCanvas();
+            GenerateKeyFrames();
+            if (this.keyFrameCount > 0)
+                {
+                StepFrame(0);
+                }
+            else
+                {
+                FitImageToCanvas();
+                }
             ComputeImageDisplayRect();
             await DrawCanvas();
             }
@@ -409,6 +682,8 @@ namespace Portfolio.Client.Pages
                     FitImageToCanvas();
                     }
                 ComputeImageDisplayRect();
+                this.keyFrames = null;
+                this.keyFrameCount = 0;
 
                 this.fullScreen = await JSRuntime.InvokeAsync<bool>("IsFullScreen");
                 await DrawCanvas();

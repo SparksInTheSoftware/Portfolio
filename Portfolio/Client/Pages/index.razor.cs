@@ -32,6 +32,39 @@ namespace Portfolio.Client.Pages
         private bool fullScreen = false;
         private string fullScreenClass { get; set; } = "oi oi-fullscreen-enter";
 
+        private String ImageNumber
+            {
+            get
+                {
+                if (this.imageInfos == null)
+                    return "";
+
+                return $"{this.currentImageIndex + 1} / {this.imageInfos.Length}";
+                }
+            }
+
+        private String FrameInfo
+            {
+            get
+                {
+                if (this.keyFrameCount > 1)
+                    {
+                    int secs = this.currentKeyFrameIndex / fps;
+                    int frame = (this.currentKeyFrameIndex % fps) + 1;
+                    return $"{secs,3:D3}:{frame,2:D2}";
+                    }
+
+                return "0:1";
+                }
+            }
+        private string Zoom
+            {
+            get
+                {
+                return $"%{this.zoom * 100,3:F1}";
+                }
+            }
+
         private string CurFileName
             {
             get
@@ -50,7 +83,7 @@ namespace Portfolio.Client.Pages
 
         private KeyFrame[] keyFrames;
         private int keyFrameCount = 0;
-        private int currentKeyFrameIndex = -1;
+        private int currentKeyFrameIndex = 0;
         private const int fps = 60;
         private void DoFullScreen()
             {
@@ -71,8 +104,8 @@ namespace Portfolio.Client.Pages
                 {
                 await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<Index>(this));
                 this.imageInfos = await HttpClient.GetFromJsonAsync<ImageInfo[]>("portfolio.json");
-                await this.containerDiv.FocusAsync();
                 await OnResize();
+                await this.containerDiv.FocusAsync();
                 }
             }
 
@@ -118,6 +151,7 @@ namespace Portfolio.Client.Pages
                 percent = this.minZoom;
 
             this.zoom = percent;
+            StateHasChanged();
 
             this.imageAnchor.X = (int) (((double) this.imageAnchor.X * this.zoom) /  prevZoom);
             this.imageAnchor.Y = (int) (((double) this.imageAnchor.Y * this.zoom) / prevZoom);
@@ -143,7 +177,7 @@ namespace Portfolio.Client.Pages
                 };
             this.imageDisplayRect.Offset(offset);
 
-            // if zoomed image is bigger than canvas, don't keep the image on the canvas
+            // if zoomed image is bigger than canvas, keep the image on the canvas
             if (this.imageSizeZoomed.Width >= this.canvasSize.Width)
                 {
                 if (this.imageDisplayRect.X > 0)
@@ -339,24 +373,66 @@ namespace Portfolio.Client.Pages
                         AddKeyFrame(args.Key[0] - '0');
                         break;
                     case "[":
-                        await StepFrame(-1);
+                        await OnStepBackward();
                         break;
                     case "]":
-                        await StepFrame(1);
+                        await OnStepForward();
                         break;
 
-                    case "p":
-                        PlayKeyFrames();
+                    case " ":
+                        await OnPlayPause();
                         break;
                     }
                 }
             }
 
+        private async Task OnSkipForward()
+            {
+            await ShowFrame(this.keyFrameCount - 1);
+            }
+
+        private async Task OnSkipBackward()
+            {
+            await ShowFrame(0);
+            }
+
+        private async Task OnStepForward()
+            {
+            await StepFrame(1);
+            }
+
+        private async Task OnStepBackward()
+            {
+            await StepFrame(-1);
+            }
+
+        private String PlayPauseClass
+            {
+            get
+                {
+                return (this.timer == null) ? "oi-media-play" : "oi-media-pause";
+                }
+            }
         Timer timer;
-        private void PlayKeyFrames()
+        private async Task OnPlayPause()
+            {
+            if (this.timer == null)
+                {
+                Play();
+                }
+            else
+                {
+                Pause();
+                }
+            }
+
+        private async Task Play()
             {
             int millis = 1000 / fps;
-            this.currentKeyFrameIndex = 0;
+            if (this.currentKeyFrameIndex >= (this.keyFrameCount - 1))
+                {
+                await ShowFrame(0);
+                }
             this.timer = new Timer(TimerTick, null, millis, millis);
             }
 
@@ -364,17 +440,22 @@ namespace Portfolio.Client.Pages
             {
             InvokeAsync(async () =>
                 {
-                if (!(await StepFrame(1)))
+                if (await StepFrame(1))
                     {
                     // All done... turn off the timer
-                    if (this.timer != null)
-                        {
-                        this.timer.Dispose();
-                        this.timer = null;
-                        }
+                    Pause();
                     }
-
                 });
+            }
+
+        private void Pause()
+            {
+            if (this.timer != null)
+                {
+                this.timer.Dispose();
+                this.timer = null;
+                StateHasChanged();
+                }
             }
         private void AddKeyFrame(int iFrame)
             {
@@ -405,40 +486,47 @@ namespace Portfolio.Client.Pages
             }
         private async Task<bool> StepFrame(int increment)
             {
+            return await ShowFrame(this.currentKeyFrameIndex + increment);
+            }
+
+        private async Task<bool> ShowFrame(int frameIndex)
+            {
             if (this.keyFrames == null)
                 {
                 GenerateKeyFrames();
                 }
 
-            this.currentKeyFrameIndex += increment;
-
-            if (this.currentKeyFrameIndex > this.keyFrameCount)
+            // Ensure frameIndex is in range
+            if (frameIndex >= this.keyFrameCount)
                 {
-                this.currentKeyFrameIndex = this.keyFrameCount -1;
+                frameIndex = this.keyFrameCount - 1;
                 }
-            else if (this.currentKeyFrameIndex < 0)
+            else if (frameIndex < 0)
                 {
-                this.currentKeyFrameIndex = 0;
+                frameIndex = 0;
                 }
 
-            if (this.currentKeyFrameIndex < this.keyFrameCount) // Could be no keyframes
+            if (frameIndex < this.keyFrameCount)
                 {
-                this.imageDisplayRect = this.keyFrames[this.currentKeyFrameIndex].Rectangle;
+                this.imageDisplayRect = this.keyFrames[frameIndex].Rectangle;
+                this.currentKeyFrameIndex = frameIndex;
+                this.zoom = ((double) this.imageDisplayRect.Width) / this.imageNativeSize.Width;
+                StateHasChanged();
                 await DrawCanvas();
-                return true;
                 }
 
-            return false;
+            return (frameIndex == 0) || (frameIndex == this.keyFrameCount - 1);
             }
 
         private void GenerateKeyFrames()
             {
             ImageInfo curImageInfo = this.imageInfos[this.currentImageIndex];
             this.keyFrameCount = 0;
-            this.currentKeyFrameIndex = -1;
+            this.currentKeyFrameIndex = 0;
             this.keyFrames = null;
             double scale = 1.0;
 
+            FitImageToCanvas();
             if (curImageInfo.KeyFrames.Count > 0)
                 {
                 if (this.canvasSize != curImageInfo.KeyFrameCanvasSize)
@@ -473,6 +561,22 @@ namespace Portfolio.Client.Pages
                         }
                     previousKeyFrame = scaledKeyFrame;
                     }
+                }
+            else
+                {
+                this.keyFrameCount = 1;
+                this.keyFrames = new KeyFrame[1];
+                this.keyFrames[0] = new()
+                    {
+                    FrameNumber = 0,
+                    Rectangle = new Rectangle()
+                        {
+                        X = this.imageDisplayRect.X,
+                        Y = this.imageDisplayRect.Y,
+                        Width = this.imageDisplayRect.Width,
+                        Height = this.imageDisplayRect.Height
+                        }
+                    };
                 }
             }
         private int Scale(int value, double scale)
@@ -659,14 +763,16 @@ namespace Portfolio.Client.Pages
             GenerateKeyFrames();
             if (this.keyFrameCount > 0)
                 {
-                StepFrame(0);
+                await Play();
                 }
+#if false
             else
                 {
                 FitImageToCanvas();
                 }
             ComputeImageDisplayRect();
             await DrawCanvas();
+#endif
             }
 
         [JSInvokable]
@@ -682,8 +788,8 @@ namespace Portfolio.Client.Pages
                     FitImageToCanvas();
                     }
                 ComputeImageDisplayRect();
-                this.keyFrames = null;
-                this.keyFrameCount = 0;
+
+                GenerateKeyFrames();
 
                 this.fullScreen = await JSRuntime.InvokeAsync<bool>("IsFullScreen");
                 await DrawCanvas();

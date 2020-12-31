@@ -15,6 +15,11 @@
         color: white;
     }
 
+    .media-control
+    {
+        padding-left: 20px;
+    }
+
     .l-container
     {
         position: absolute;
@@ -56,6 +61,7 @@
         position: absolute;
         top:0;
         left: 0;
+        width: 80px;
         height: 100%;
     }
 
@@ -64,23 +70,31 @@
         position: absolute;
         top:0;
         right: 0;
+        width: 80px;
         height: 100%;
     }
 
     .l-overlay
     {
         background: rgb(0, 0, 0);
-        background: rgba(0, 0, 0, 0.5); /* Black see-through */
+        background: rgba(0, 0, 0, 0.60); /* Black see-through */
         transition: .5s ease;
         opacity: 0;
-        font-size: 20px;
-        padding: 20px;
+        font-size: 40px;
+        padding: 10px;
         text-align: center;
     }
 
     .l-overlay:hover
     {
         opacity: 1;
+    }
+
+    .bar-text
+    {
+        color: white;
+        font-size: 30px;
+        padding-left: 20px;
     }
 
     .l-flex-row-reverse
@@ -97,6 +111,16 @@
         top: 50%;
         transform: translateY(-50%);
     }
+
+    .l-left-25px
+    {
+        left: 25px;
+    }
+
+    .l-right-25px
+    {
+        right: 25px;
+    }
 </style>
 
 <img @ref="imageRef" src="@CurFileName" class="hidden" @onload="OnImageLoaded"/>
@@ -107,14 +131,22 @@
     <Canvas @ref="canvas" Height="1" Width="1" />
     </div>
     <div class="l-overlay l-left">
-        <span class="oi oi-chevron-left overlay-icon l-center-vertical" aria-hidden="true" @onclick="Previous"></span>
+        <span class="oi oi-chevron-left overlay-icon l-center-vertical l-left-25px" aria-hidden="true" @onclick="Previous"> </span>
     </div>
     <div class="l-overlay l-right">
-        <span class="oi oi-chevron-right overlay-icon l-center-vertical" aria-hidden="true" @onclick="Next"></span>
+        <span class="oi oi-chevron-right overlay-icon l-center-vertical l-right-25px" aria-hidden="true" @onclick="Next"> </span>
     </div>
     <div class="l-overlay l-bottom">
         <div class="l-flex-row-reverse ">
             <span class="@fullScreenClass overlay-icon" aria-hidden="true" @onclick="DoFullScreen"> </span>
+            <span class="oi media-control oi-media-skip-forward overlay-icon" aria-hidden="true" @onclick="OnSkipForward"> </span>
+            <span class="oi media-control oi-media-step-forward overlay-icon" aria-hidden="true" @onclick="OnStepForward"> </span>
+            <span class="oi media-control @PlayPauseClass overlay-icon" aria-hidden="true" @onclick="OnPlayPause"> </span>
+            <span class="oi media-control oi-media-step-backward overlay-icon" aria-hidden="true" @onclick="OnStepBackward"> </span>
+            <span class="oi media-control oi-media-skip-backward overlay-icon" aria-hidden="true" @onclick="OnSkipBackward"> </span>
+            <span class="bar-text">@FrameInfo</span>
+            <span class="bar-text">@Zoom</span>
+            <span class="bar-text">@ImageNumber</span>
         </div>
     </div>
 </div>

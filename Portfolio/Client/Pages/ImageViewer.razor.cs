@@ -21,7 +21,7 @@ using System.Threading;
 
 namespace Portfolio.Client.Pages
     {
-    public partial class Index : ComponentBase
+    public partial class ImageViewer : ComponentBase
         {
         [Inject] IJSRuntime JSRuntime { get; set; }
         [Inject] HttpClient HttpClient { get; set; }
@@ -102,7 +102,7 @@ namespace Portfolio.Client.Pages
             {
             if (firstRender)
                 {
-                await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<Index>(this));
+                await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<ImageViewer>(this));
                 this.imageInfos = await HttpClient.GetFromJsonAsync<ImageInfo[]>("portfolio.json");
                 await OnResize();
                 await this.containerDiv.FocusAsync();

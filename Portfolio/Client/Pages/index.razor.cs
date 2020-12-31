@@ -54,7 +54,7 @@ namespace Portfolio.Client.Pages
                     return $"{secs,3:D3}:{frame,2:D2}";
                     }
 
-                return "0:1";
+                return "000:01";
                 }
             }
         private string Zoom

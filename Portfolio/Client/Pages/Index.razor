@@ -6,6 +6,15 @@
         visibility: hidden;
     }
 
+    .noselect
+    {
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+    }
+
     .overlay-icon
     {
         color: gray;
@@ -56,7 +65,7 @@
         width: 100%;
     }
 
-    .l-left
+    .bar-left
     {
         position: absolute;
         top:0;
@@ -65,7 +74,7 @@
         height: 100%;
     }
 
-    .l-right
+    .bar-right
     {
         position: absolute;
         top:0;
@@ -74,7 +83,7 @@
         height: 100%;
     }
 
-    .l-overlay
+    .bar-overlay
     {
         background: rgb(0, 0, 0);
         background: rgba(0, 0, 0, 0.60); /* Black see-through */
@@ -85,7 +94,7 @@
         text-align: center;
     }
 
-    .l-overlay:hover
+    .bar-overlay:hover
     {
         opacity: 1;
     }
@@ -97,56 +106,77 @@
         padding-left: 20px;
     }
 
-    .l-flex-row-reverse
+    .flex-row
+    {
+        display:flex;
+        flex-direction:row;
+
+    }
+
+    .flex-row-reverse
     {
         display:flex;
         flex-direction:row-reverse;
 
     }
 
-    .l-center-vertical
+    .center-vertical
     {
-        margin: 0;
+        margin: auto;
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
     }
 
-    .l-left-25px
+    .center-horizontal
+    {
+        margin: auto;
+    }
+
+    .left-25px
     {
         left: 25px;
     }
 
-    .l-right-25px
+    .right-25px
     {
         right: 25px;
+    }
+
+    .margin-10px
+    {
+        margin: 10px;
     }
 </style>
 
 <img @ref="imageRef" src="@CurFileName" class="hidden" @onload="OnImageLoaded"/>
-<div @ref="containerDiv" class="l-container" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation tabindex="0">
+<div @ref="containerDiv" class="l-container noselect" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation tabindex="0">
     <div @onmousedown="OnMouseDown" @onmousemove="OnMouseMove" @onmouseup="OnMouseUp"
          @onmousewheel="OnMouseWheel"
          >
     <Canvas @ref="canvas" Height="1" Width="1" />
     </div>
-    <div class="l-overlay l-left">
-        <span class="oi oi-chevron-left overlay-icon l-center-vertical l-left-25px" aria-hidden="true" @onclick="Previous"> </span>
+    <div class="bar-overlay bar-left">
+        <span class="oi oi-chevron-left overlay-icon center-vertical left-25px" aria-hidden="true" @onclick="Previous"> </span>
     </div>
-    <div class="l-overlay l-right">
-        <span class="oi oi-chevron-right overlay-icon l-center-vertical l-right-25px" aria-hidden="true" @onclick="Next"> </span>
+    <div class="bar-overlay bar-right">
+        <span class="oi oi-chevron-right overlay-icon center-vertical right-25px" aria-hidden="true" @onclick="Next"> </span>
     </div>
-    <div class="l-overlay l-bottom">
-        <div class="l-flex-row-reverse ">
-            <span class="@fullScreenClass overlay-icon" aria-hidden="true" @onclick="DoFullScreen"> </span>
-            <span class="oi media-control oi-media-skip-forward overlay-icon" aria-hidden="true" @onclick="OnSkipForward"> </span>
-            <span class="oi media-control oi-media-step-forward overlay-icon" aria-hidden="true" @onclick="OnStepForward"> </span>
-            <span class="oi media-control @PlayPauseClass overlay-icon" aria-hidden="true" @onclick="OnPlayPause"> </span>
-            <span class="oi media-control oi-media-step-backward overlay-icon" aria-hidden="true" @onclick="OnStepBackward"> </span>
-            <span class="oi media-control oi-media-skip-backward overlay-icon" aria-hidden="true" @onclick="OnSkipBackward"> </span>
-            <span class="bar-text">@FrameInfo</span>
-            <span class="bar-text">@Zoom</span>
-            <span class="bar-text">@ImageNumber</span>
+    <div class="bar-overlay l-bottom">
+        <div class="flex-row">
+            <div class="left-25px flex-row">
+                <span class="bar-text">@ImageNumber</span>
+                <span class="bar-text">@Zoom</span>
+            </div>
+            <div class="center-horizontal">
+                <span class="oi media-control oi-media-skip-backward overlay-icon" aria-hidden="true" @onclick="OnSkipBackward"> </span>
+                <span class="oi media-control oi-media-step-backward overlay-icon" aria-hidden="true" @onclick="OnStepBackward"> </span>
+                <span class="oi media-control @PlayPauseClass overlay-icon" aria-hidden="true" @onclick="OnPlayPause"> </span>
+                <span class="oi media-control oi-media-step-forward overlay-icon" aria-hidden="true" @onclick="OnStepForward"> </span>
+                <span class="oi media-control oi-media-skip-forward overlay-icon" aria-hidden="true" @onclick="OnSkipForward"> </span>
+                <span class="bar-text">@FrameInfo</span>
+            </div>
+            <span class="@fullScreenClass overlay-icon margin-10px" aria-hidden="true" @onclick="DoFullScreen"> </span>
         </div>
     </div>
 </div>

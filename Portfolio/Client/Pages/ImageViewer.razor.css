@@ -1,0 +1,148 @@
+﻿
+    .hidden
+    {
+        display: none;
+        visibility: hidden;
+    }
+
+    .noselect
+    {
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+    }
+
+    .overlay-icon
+    {
+        color: gray;
+    }
+    .overlay-icon:hover
+    {
+        color: white;
+    }
+
+    .media-control
+    {
+        padding-left: 20px;
+    }
+
+    .l-container
+    {
+        position: absolute;
+        left:0;
+        top:0;
+        width: 100%;
+        height: 100%;
+        background: rgb(0, 0, 0);
+    }
+
+    .l-image
+    {
+        position: absolute;
+        left:0;
+        top:0;
+        width: 100%;
+        height: 100%;
+        object-fit:contain;
+    }
+
+    .l-top
+    {
+        position: absolute;
+        left:0;
+        top: 0;
+        width: 100%;
+    }
+
+    .l-bottom
+    {
+        position: absolute;
+        left:0;
+        bottom: 0;
+        width: 100%;
+    }
+
+    .bar-left
+    {
+        position: absolute;
+        top:0;
+        left: 0;
+        width: 80px;
+        height: 100%;
+    }
+
+    .bar-right
+    {
+        position: absolute;
+        top:0;
+        right: 0;
+        width: 80px;
+        height: 100%;
+    }
+
+    .bar-overlay
+    {
+        background: rgb(0, 0, 0);
+        background: rgba(0, 0, 0, 0.60); /* Black see-through */
+        transition: .5s ease;
+        opacity: 0;
+        font-size: 40px;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .bar-overlay:hover
+    {
+        opacity: 1;
+    }
+
+    .bar-text
+    {
+        color: white;
+        font-size: 30px;
+        padding-left: 20px;
+    }
+
+    .flex-row
+    {
+        display:flex;
+        flex-direction:row;
+
+    }
+
+    .flex-row-reverse
+    {
+        display:flex;
+        flex-direction:row-reverse;
+
+    }
+
+    .center-vertical
+    {
+        margin: auto;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .center-horizontal
+    {
+        margin: auto;
+    }
+
+    .left-25px
+    {
+        left: 25px;
+    }
+
+    .right-25px
+    {
+        right: 25px;
+    }
+
+    .margin-10px
+    {
+        margin: 10px;
+    }

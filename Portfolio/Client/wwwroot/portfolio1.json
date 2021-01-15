@@ -1,0 +1,102 @@
+[
+  {
+    "Source": "https://www.sparksinthesoftware.com/portfolio/images/DSC02674.jpg",
+    "KeyFrameCanvasSize": {
+      "IsEmpty": false,
+      "Width": 1280,
+      "Height": 720
+    },
+    "KeyFrames": [
+      {
+        "Rectangle": {
+          "X": -447,
+          "Y": -1273,
+          "Width": 2531,
+          "Height": 2156
+        },
+        "FrameNumber": 0
+      },
+      {
+        "Rectangle": {
+          "X": -447,
+          "Y": -1273,
+          "Width": 2531,
+          "Height": 2156
+        },
+        "FrameNumber": 60
+      },
+      {
+        "Rectangle": {
+          "X": 218,
+          "Y": 0,
+          "Width": 845,
+          "Height": 720
+        },
+        "FrameNumber": 120
+      }
+    ]
+  },
+  {
+    "Source": "https://www.sparksinthesoftware.com/portfolio/images/DSC01316.01.jpg",
+    "KeyFrameCanvasSize": {
+      "IsEmpty": true,
+      "Width": 0,
+      "Height": 0
+    },
+    "KeyFrames": []
+  },
+  {
+    "Source": "https://www.sparksinthesoftware.com/portfolio/images/DSC01320.01.jpg",
+    "KeyFrameCanvasSize": {
+      "IsEmpty": true,
+      "Width": 0,
+      "Height": 0
+    },
+    "KeyFrames": []
+  },
+  {
+    "Source": "https://www.sparksinthesoftware.com/portfolio/images/DSC01323.01.jpg",
+    "KeyFrameCanvasSize": {
+      "IsEmpty": true,
+      "Width": 0,
+      "Height": 0
+    },
+    "KeyFrames": []
+  },
+  {
+    "Source": "https://www.sparksinthesoftware.com/portfolio/images/DSC01324.01.jpg",
+    "KeyFrameCanvasSize": {
+      "IsEmpty": true,
+      "Width": 0,
+      "Height": 0
+    },
+    "KeyFrames": []
+  },
+  {
+    "Source": "https://www.sparksinthesoftware.com/portfolio/images/DSC01327.01.jpg",
+    "KeyFrameCanvasSize": {
+      "IsEmpty": true,
+      "Width": 0,
+      "Height": 0
+    },
+    "KeyFrames": []
+  },
+  {
+    "Source": "https://www.sparksinthesoftware.com/portfolio/images/DSC01334.01.jpg",
+    "KeyFrameCanvasSize": {
+      "IsEmpty": true,
+      "Width": 0,
+      "Height": 0
+    },
+    "KeyFrames": []
+  },
+  {
+    "Source": "https://www.sparksinthesoftware.com/portfolio/images/DSC01336.01.jpg",
+    "KeyFrameCanvasSize": {
+      "IsEmpty": true,
+      "Width": 0,
+      "Height": 0
+    },
+    "KeyFrames": []
+  }
+]

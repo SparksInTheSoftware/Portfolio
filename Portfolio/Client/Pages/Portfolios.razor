@@ -1,0 +1,11 @@
+﻿@page "/Portfolios"
+
+<div style="width:100%;height:100%">
+    <div @ref="containerDiv" class="cover-scroller">
+        @foreach (var portfolioInfo in PortfolioInfos)
+        {
+            <CoverView CoverViews="coverViews" PortfolioInfo="portfolioInfo"/>
+        }
+    </div>
+</div>
+

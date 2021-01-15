@@ -1,0 +1,21 @@
+﻿<style>
+
+.thumbnail-array
+{
+    margin: 10px 25px 10px 25px;
+}
+.thumbnail-array:hover
+{
+}
+</style>
+
+<div @ref="containerDiv" class="thumbnail-array" @onclick="OnClick" style="min-width: @(CoverSize.Width)px;height: 95%;">
+    <div class="hidden">
+        <img @ref="imageRef0" src="@FileName(0)" @onload="OnImageLoaded0"/>
+        <img @ref="imageRef1" src="@FileName(1)" @onload="OnImageLoaded1"/>
+        <img @ref="imageRef2" src="@FileName(2)" @onload="OnImageLoaded2"/>
+        <img @ref="imageRef3" src="@FileName(3)" @onload="OnImageLoaded3"/>
+        <img @ref="imageRef4" src="@FileName(4)" @onload="OnImageLoaded4"/>
+    </div>
+    <Canvas @ref="canvas"/>
+</div>

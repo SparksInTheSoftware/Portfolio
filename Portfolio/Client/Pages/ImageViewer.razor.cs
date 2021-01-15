@@ -26,6 +26,9 @@ namespace Portfolio.Client.Pages
         [Inject] IJSRuntime JSRuntime { get; set; }
         [Inject] HttpClient HttpClient { get; set; }
 
+        [Parameter]
+        public String FileName { get; set; }
+
         private ElementReference containerDiv;
         private ElementReference imageRef;
         private Canvas canvas;
@@ -103,7 +106,7 @@ namespace Portfolio.Client.Pages
             if (firstRender)
                 {
                 await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<ImageViewer>(this));
-                this.imageInfos = await HttpClient.GetFromJsonAsync<ImageInfo[]>("portfolio.json");
+                this.imageInfos = await HttpClient.GetFromJsonAsync<ImageInfo[]>(FileName + ".json");
                 await OnResize();
                 await this.containerDiv.FocusAsync();
                 }
@@ -780,7 +783,7 @@ namespace Portfolio.Client.Pages
             {
             // Make sure the canvas is the same size as its conainer
             Size newCanvasSize = await JSRuntime.InvokeAsync<Size>("ResizeCanvas", this.containerDiv, this.canvas.GetCanvasRef());
-            if ((newCanvasSize.Width != this.canvasSize.Width) || (newCanvasSize.Width != this.canvasSize.Width))
+            if ((newCanvasSize.Width != this.canvasSize.Width) || (newCanvasSize.Height != this.canvasSize.Height))
                 {
                 this.canvasSize = newCanvasSize;
                 if (this.zoom == this.minZoom)

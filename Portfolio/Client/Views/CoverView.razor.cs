@@ -317,8 +317,9 @@ namespace Portfolio.Client.Views
             {
             if ((this.rectangleAspects != null) && (index < PortfolioInfo?.FileNames?.Count))
                 {
+                int imageIndex = PortfolioInfo.ImageIndexes[index];
                 String folder = this.aspectFolderNames[(int) this.rectangleAspects[index]];
-                String fileName = PortfolioInfo.FileNames[index];
+                String fileName = PortfolioInfo.FileNames[imageIndex];
 
                 return $"{PortfolioInfo.RootPath}\\{folder}\\{fileName}";
                 }
@@ -346,22 +347,80 @@ namespace Portfolio.Client.Views
             {
             await OnImageLoaded(4);
             }
-        private async Task OnImageLoaded(int imageIndex)
+        private async Task OnImageLoaded(int index)
             {
-            this.imageNativeSizes[imageIndex] = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRefs[imageIndex]);
-            await DrawImage(imageIndex);
+            this.imageNativeSizes[index] = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRefs[index]);
+            await DrawImage(index);
             }
 
+        private bool ignoreClick = false;
         protected void OnClick()
             {
-            NavigationManager.NavigateTo($"ImageViewer\\{PortfolioInfo.Name}");
+            if (!this.ignoreClick)
+                {
+                NavigationManager.NavigateTo($"ImageViewer\\{PortfolioInfo.Name}");
+                }
             }
 
-        private Size canvasSize = new () { Width = 0, Height = 0};
+        private async Task OnMouseDown(MouseEventArgs args)
+            {
+            await this.containerDiv.FocusAsync();
+            this.ignoreClick = true;
+            if (args.AltKey)
+                {
+                PortfolioInfo.CoverStyle++;
+                if (PortfolioInfo.CoverStyle > 3)
+                    {
+                    PortfolioInfo.CoverStyle = 1;
+                    }
+                InitRectangles(this.canvasSize.Height);
+                StateHasChanged();
+                }
+            else if (args.CtrlKey)
+                {
+                int index = RectangleIndexAt((int) args.OffsetX, (int) args.OffsetY);
+                if (index != -1)
+                    {
+                    if (args.ShiftKey)
+                        {
+                        PortfolioInfo.ImageIndexes[index]--;
+                        if (PortfolioInfo.ImageIndexes[index] < 0)
+                            {
+                            PortfolioInfo.ImageIndexes[index] = PortfolioInfo.FileNames.Count - 1;
+                            }
+                        }
+                    else
+                        {
+                        PortfolioInfo.ImageIndexes[index]++;
+                        if (PortfolioInfo.ImageIndexes[index] >= PortfolioInfo.FileNames.Count)
+                            {
+                            PortfolioInfo.ImageIndexes[index] = 0;
+                            }
+                        }
+                    StateHasChanged();
+                    }
+                }
+            else
+                {
+                this.ignoreClick = false;
+                }
+            }
+
+        private int RectangleIndexAt(int x, int y)
+            {
+            for (int i = 0; i < 5; i++)
+                {
+                Rectangle rect = this.rectangles[i];
+                if ((x >= rect.X && x <= rect.Right) && (y >= rect.Y && y <= rect.Bottom))
+                    return i;
+                }
+            return -1;
+            }
+
+        private Size canvasSize = new () { Width = 0, Height = 0 };
         private Canvas2DContext canvas2Dcontext;
         private async Task DrawCanvas()
             {
-
             if ((this.canvasSize.Width > 0) && (this.canvasSize.Height > 0))
                 {
 

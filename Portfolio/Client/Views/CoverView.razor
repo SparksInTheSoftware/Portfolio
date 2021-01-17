@@ -9,7 +9,7 @@
 }
 </style>
 
-<div @ref="containerDiv" class="thumbnail-array" @onclick="OnClick" style="min-width: @(CoverSize.Width)px;height: 95%;">
+<div @ref="containerDiv" class="thumbnail-array" @onmousedown="OnMouseDown" @onclick="OnClick" style="min-width: @(CoverSize.Width)px;height: 95%;">
     <div class="hidden">
         <img @ref="imageRef0" src="@FileName(0)" @onload="OnImageLoaded0"/>
         <img @ref="imageRef1" src="@FileName(1)" @onload="OnImageLoaded1"/>

@@ -285,6 +285,11 @@ namespace Portfolio.Client.Pages
                     await JSRuntime.InvokeVoidAsync("PrefetchImage", this.imageInfos[this.currentImageIndex + 1].Source);
                 }
             }
+
+        private async Task Back()
+            {
+            await JSRuntime.InvokeVoidAsync("GoBack");
+            }
         private async Task Previous()
             {
             if (this.imageInfos?.Length > 0)

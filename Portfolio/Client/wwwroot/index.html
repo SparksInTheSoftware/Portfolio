@@ -61,6 +61,11 @@
             return document.fullscreenElement != null;
         }
 
+        function GoBack()
+        {
+            window.history.back();
+        }
+
         var windowHandler = null;
         function RegisterWindowHandler(handler)
         {

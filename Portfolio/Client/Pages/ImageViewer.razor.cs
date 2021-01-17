@@ -64,7 +64,7 @@ namespace Portfolio.Client.Pages
             {
             get
                 {
-                return $"%{this.zoom * 100,3:F1}";
+                return $"{this.zoom * 100,3:F1}%";
                 }
             }
 
@@ -472,6 +472,11 @@ namespace Portfolio.Client.Pages
 
             KeyFrame keyFrame;
 
+            if (curImageInfo.KeyFrames == null)
+                {
+                curImageInfo.KeyFrames = new ();
+                }
+
             // All the frames between the current last frame and iFrame are filled with the current rectangle.
             while (iFrame >= curImageInfo.KeyFrames.Count)
                 {
@@ -530,7 +535,7 @@ namespace Portfolio.Client.Pages
             double scale = 1.0;
 
             FitImageToCanvas();
-            if (curImageInfo.KeyFrames.Count > 0)
+            if (curImageInfo.KeyFrames?.Count > 0)
                 {
                 if (this.canvasSize != curImageInfo.KeyFrameCanvasSize)
                     {

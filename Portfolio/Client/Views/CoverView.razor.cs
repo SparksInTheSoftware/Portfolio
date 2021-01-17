@@ -17,6 +17,8 @@ namespace Portfolio.Client.Views
     public partial class CoverView : ComponentBase
         {
         [Inject] IJSRuntime JSRuntime { get; set; }
+        [Inject] NavigationManager NavigationManager { get; set; }
+
         private ElementReference containerDiv;
 
         [Parameter]
@@ -50,6 +52,8 @@ namespace Portfolio.Client.Views
         private ElementReference imageRef2;
         private ElementReference imageRef3;
         private ElementReference imageRef4;
+        private ElementReference [] imageRefs;
+        private Size[] imageNativeSizes;
 
         private Size CoverSize
             {
@@ -81,6 +85,9 @@ namespace Portfolio.Client.Views
 
         private const int gap = 4;
         private Rectangle[] rectangles;
+        enum Aspect { _1x1, _2x3 };
+        private Aspect [] rectangleAspects;
+        private String[] aspectFolderNames = { "1x1", "2x3" };
 
         private void InitRectangles(int h)
             {
@@ -117,6 +124,13 @@ namespace Portfolio.Client.Views
              * Two squares in first column
              * Three rectangles in second column
              */
+            this.rectangleAspects = new Aspect[5];
+            this.rectangleAspects[0] = Aspect._1x1;
+            this.rectangleAspects[1] = Aspect._1x1;
+            this.rectangleAspects[2] = Aspect._2x3;
+            this.rectangleAspects[3] = Aspect._2x3;
+            this.rectangleAspects[4] = Aspect._2x3;
+
             double ratio = 3.0 / 2.0;
             this.rectangles = new Rectangle[5];
             int x = this.marginSize.Width;
@@ -171,6 +185,12 @@ namespace Portfolio.Client.Views
              * 17) h1 = (3*h - 2*gap)/(2*ratio + 3)
              *
              */
+            this.rectangleAspects = new Aspect[5];
+            this.rectangleAspects[0] = Aspect._2x3;
+            this.rectangleAspects[1] = Aspect._2x3;
+            this.rectangleAspects[2] = Aspect._1x1;
+            this.rectangleAspects[3] = Aspect._1x1;
+            this.rectangleAspects[4] = Aspect._1x1;
             double ratio = 3.0 / 2.0;
             int h1 = (int)((3.0 * h - 2.0 * gap) / (2.0 * ratio + 3.0));
             int h2 = h - h1 - gap;
@@ -230,6 +250,12 @@ namespace Portfolio.Client.Views
             11) 2*(h - gap) = 5*h2 + gap
             12) h2 = (2*(h -gap) – gap)/5
              */
+            this.rectangleAspects = new Aspect[5];
+            this.rectangleAspects[0] = Aspect._1x1;
+            this.rectangleAspects[1] = Aspect._1x1;
+            this.rectangleAspects[2] = Aspect._1x1;
+            this.rectangleAspects[3] = Aspect._1x1;
+            this.rectangleAspects[4] = Aspect._1x1;
 
             this.rectangles = new Rectangle[5];
             int h2 = (2 * (h - gap) - gap) / 5;
@@ -260,12 +286,21 @@ namespace Portfolio.Client.Views
             {
             if (firstRender)
                 {
+                this.imageRefs = new ElementReference[5];
+                this.imageRefs[0] = this.imageRef0;
+                this.imageRefs[1] = this.imageRef1;
+                this.imageRefs[2] = this.imageRef2;
+                this.imageRefs[3] = this.imageRef3;
+                this.imageRefs[4] = this.imageRef4;
+                this.imageNativeSizes = new Size[5];
+
                 await this.containerDiv.FocusAsync();
                 await OnResize();
                 this.delayDrawTimer = new Timer(DelayDraw, null, 10, 0);
                 }
             else
                 {
+                await OnResize();
                 await DrawCanvas();
                 }
             }
@@ -280,9 +315,12 @@ namespace Portfolio.Client.Views
 
         private String FileName(int index)
             {
-            if (index < PortfolioInfo?.CoverImageFileNames?.Count)
+            if ((this.rectangleAspects != null) && (index < PortfolioInfo?.FileNames?.Count))
                 {
-                return PortfolioInfo.CoverImageFileNames[index];
+                String folder = this.aspectFolderNames[(int) this.rectangleAspects[index]];
+                String fileName = PortfolioInfo.FileNames[index];
+
+                return $"{PortfolioInfo.RootPath}\\{folder}\\{fileName}";
                 }
 
             return "";
@@ -310,31 +348,27 @@ namespace Portfolio.Client.Views
             }
         private async Task OnImageLoaded(int imageIndex)
             {
-#if false
-            this.imageNativeSize = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRef);
-            GenerateKeyFrames();
-            if (this.keyFrameCount > 0)
-                {
-                await Play();
-                }
-#endif
+            this.imageNativeSizes[imageIndex] = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRefs[imageIndex]);
+            await DrawImage(imageIndex);
             }
 
-        protected async Task OnClick()
+        protected void OnClick()
             {
-            await DrawCanvas();
+            NavigationManager.NavigateTo($"ImageViewer\\{PortfolioInfo.Name}");
             }
 
-        private Size imageNativeSize = new () { Width = 1, Height = 1};
         private Size canvasSize = new () { Width = 0, Height = 0};
-        private Canvas2DContext _context;
+        private Canvas2DContext canvas2Dcontext;
         private async Task DrawCanvas()
             {
 
-            if ((this.imageNativeSize.Width > 0) && (this.imageNativeSize.Height > 0))
+            if ((this.canvasSize.Width > 0) && (this.canvasSize.Height > 0))
                 {
 
-                this._context = await this.canvas.CreateCanvas2DAsync();
+                if (this.canvas2Dcontext == null)
+                    {
+                    this.canvas2Dcontext = await this.canvas.CreateCanvas2DAsync();
+                    }
 
                 for (int i = 0; i < this.rectangles.Length; i++)
                     {
@@ -343,37 +377,37 @@ namespace Portfolio.Client.Views
                 }
             }
 
-        private bool displayInfo = true;
-        private async Task DrawImage(int imageIndex)
+        private bool displayInfo = false;
+        private async Task DrawImage(int index)
             {
-            Rectangle rectangle = this.rectangles[imageIndex];
+            Rectangle rectangle = this.rectangles[index];
+            Size imageSize = this.imageNativeSizes[index];
+            ElementReference imageRef = this.imageRefs[index];
 
-            await this._context.BeginBatchAsync();
+            await this.canvas2Dcontext.BeginBatchAsync();
 
-#if false
-            await this._context.DrawImageAsync(this.imageRef,
-                0, 0, this.imageNativeSize.Width, this.imageNativeSize.Height,
-                this.imageDisplayRect.X, this.imageDisplayRect.Y, this.imageDisplayRect.Width, this.imageDisplayRect.Height);
-#endif
+            await this.canvas2Dcontext.DrawImageAsync(imageRef,
+                0, 0, imageSize.Width, imageSize.Height,
+                rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
 
-            await this._context.BeginPathAsync();
-            await this._context.SetStrokeStyleAsync("gray");
-            await this._context.SetLineWidthAsync(2);
-            await this._context.RectAsync(rectangle.Left, rectangle.Top, rectangle.Width, rectangle.Height);
-            await this._context.StrokeAsync();
-            await this._context.EndBatchAsync();
+            await this.canvas2Dcontext.BeginPathAsync();
+            await this.canvas2Dcontext.SetStrokeStyleAsync("gray");
+            await this.canvas2Dcontext.SetLineWidthAsync(2);
+            await this.canvas2Dcontext.RectAsync(rectangle.Left, rectangle.Top, rectangle.Width, rectangle.Height);
+            await this.canvas2Dcontext.StrokeAsync();
+            await this.canvas2Dcontext.EndBatchAsync();
 
             if (this.displayInfo)
                 {
-                await this._context.BeginBatchAsync();
-                await this._context.SetStrokeStyleAsync("black");
-                await this._context.SetLineWidthAsync(1);
-                await this._context.SetFontAsync("lighter 16px menu");
+                await this.canvas2Dcontext.BeginBatchAsync();
+                await this.canvas2Dcontext.SetStrokeStyleAsync("black");
+                await this.canvas2Dcontext.SetLineWidthAsync(1);
+                await this.canvas2Dcontext.SetFontAsync("lighter 16px menu");
                 int x = rectangle.Left + 10;
                 int y = rectangle.Top + (rectangle.Height/2);
-                await this._context.StrokeTextAsync($"{rectangle.Width} x {rectangle.Height}", x, y);
+                await this.canvas2Dcontext.StrokeTextAsync($"{rectangle.Width} x {rectangle.Height}", x, y);
 
-                await this._context.EndBatchAsync();
+                await this.canvas2Dcontext.EndBatchAsync();
                 }
             }
 
@@ -382,6 +416,7 @@ namespace Portfolio.Client.Views
             Size newCanvasSize = await JSRuntime.InvokeAsync<Size>("ResizeCanvas", this.containerDiv, this.canvas.GetCanvasRef());
             if ((newCanvasSize.Width != this.canvasSize.Width) || (newCanvasSize.Height != this.canvasSize.Height))
                 {
+                // Console.WriteLine($"OnResize() - {newCanvasSize.Width} x {newCanvasSize.Height}");
                 this.canvasSize = newCanvasSize;
                 InitRectangles(this.canvasSize.Height);
                 StateHasChanged();

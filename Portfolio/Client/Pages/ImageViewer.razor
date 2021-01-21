@@ -1,11 +1,12 @@
 ﻿@page "/ImageViewer/{FileName}"
 
-<img @ref="imageRef" src="@CurFileName" class="hidden" @onload="OnImageLoaded"/>
-<div @ref="containerDiv" class="l-container noselect" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation tabindex="0">
+<img @ref="imageRef" src="@CurFileName" class="display-none" @onload="OnImageLoaded"/>
+<div @ref="containerDiv" class="l-container noselect no-touch" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation tabindex="0">
     <div @onmousedown="OnMouseDown" @onmousemove="OnMouseMove" @onmouseup="OnMouseUp"
          @onmousewheel="OnMouseWheel"
          >
-    <Canvas @ref="canvas" Height="1" Width="1" />
+    <Canvas @ref="canvas" Height="1" Width="1"
+            />
     </div>
     <div class="bar-overlay bar-left">
         <span class="oi oi-arrow-left overlay-icon" aria-hidden="true" @onclick="Back"> </span>
@@ -14,13 +15,26 @@
     <div class="bar-overlay bar-right">
         <span class="oi oi-chevron-right overlay-icon center-vertical right-25px" aria-hidden="true" @onclick="Next"> </span>
     </div>
+    <div class="bar-overlay l-top" style="min-height:10px;width:100%;" @onmouseover="OnMouseOverGallery" @onmouseout="OnMouseOutGallery">
+        <div class="@galleryClass">
+            <div class="flex-row">
+                @if (this.imageInfos != null)
+                    {
+                    for (int i = 0;  i < imageInfos.Length; i++)
+                        {
+                        int hack = i;  // need to capture current value of i for delegate below.
+                        <img src="@FullThumbnailPath(i)" width="150" height="150" style="margin:10px;" @onclick="() => ShowImage(hack)" />
+                        }
+                    }
+            </div>
+        </div>
+    </div>
     <div class="bar-overlay l-bottom">
         <div class="flex-row">
             <div class="left-25px flex-row">
                 <span class="bar-text">@ImageNumber</span>
-                <span class="bar-text">@Zoom</span>
             </div>
-            <div class="center-horizontal">
+            <div class="center-horizontal @TransportControlsClass">
                 <span class="oi media-control oi-media-skip-backward overlay-icon" aria-hidden="true" @onclick="OnSkipBackward"> </span>
                 <span class="oi media-control oi-media-step-backward overlay-icon" aria-hidden="true" @onclick="OnStepBackward"> </span>
                 <span class="oi media-control @PlayPauseClass overlay-icon" aria-hidden="true" @onclick="OnPlayPause"> </span>
@@ -28,7 +42,12 @@
                 <span class="oi media-control oi-media-skip-forward overlay-icon" aria-hidden="true" @onclick="OnSkipForward"> </span>
                 <span class="bar-text">@FrameInfo</span>
             </div>
-            <span class="@fullScreenClass overlay-icon margin-10px" aria-hidden="true" @onclick="DoFullScreen"> </span>
+            <div class="left-25px flex-row zoom">
+                <span class="oi oi-minus overlay-icon" @onclick="ZoomOut"/>
+                <span class="">@Zoom</span>
+                <span class="oi oi-plus overlay-icon" @onclick="ZoomIn"/>
+                <span class="@fullScreenClass overlay-icon" aria-hidden="true" @onclick="DoFullScreen"> </span>
+            </div>
         </div>
     </div>
 </div>

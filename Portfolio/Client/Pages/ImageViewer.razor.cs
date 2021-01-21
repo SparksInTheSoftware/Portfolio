@@ -25,6 +25,7 @@ namespace Portfolio.Client.Pages
         {
         [Inject] IJSRuntime JSRuntime { get; set; }
         [Inject] HttpClient HttpClient { get; set; }
+        [Inject] AppData AppData { get; set; }
 
         [Parameter]
         public String FileName { get; set; }
@@ -34,6 +35,15 @@ namespace Portfolio.Client.Pages
         private Canvas canvas;
         private bool fullScreen = false;
         private string fullScreenClass { get; set; } = "oi oi-fullscreen-enter";
+
+        private bool galleryVisible = false;
+        private string galleryClass
+            {
+            get
+                {
+                return "gallery" + (this.galleryVisible ? "" : " display-none");
+                }
+            }
 
         private String ImageNumber
             {
@@ -64,7 +74,7 @@ namespace Portfolio.Client.Pages
             {
             get
                 {
-                return $"{this.zoom * 100,3:F1}%";
+                return (this.zoom < 0.10) ? $"{this.zoom * 100,3:F1}%" : $"{this.zoom * 100,3:F0}%";
                 }
             }
 
@@ -72,14 +82,31 @@ namespace Portfolio.Client.Pages
             {
             get
                 {
-                if ((this.imageInfos != null) && (this.currentImageIndex < this.imageInfos.Length))
-                    {
-                    return this.imageInfos[this.currentImageIndex].Source;
-                    }
-                return "";
+                return FullImagePath(this.currentImageIndex);
                 }
             }
 
+        private String FullImagePath(String subFolder, int index)
+            {
+            String path = AppData.CurrentPortfolioInfo.RootPath;
+            String fileName = AppData.CurrentPortfolioInfo.FileNames[index];
+
+            return $"{path}/{subFolder}/{fileName}";
+            }
+
+        private String FullImagePath(int index)
+            {
+                if (index < AppData?.CurrentPortfolioInfo?.FileNames?.Count)
+                    {
+                    return FullImagePath("full", index);
+                    }
+
+                return "";
+            }
+        private String FullThumbnailPath(int index)
+            {
+            return FullImagePath("1x1", index);
+            }
 
         private ImageInfo[] imageInfos;
         private int currentImageIndex = 0;
@@ -103,12 +130,15 @@ namespace Portfolio.Client.Pages
         private Canvas2DContext _context;
         protected override async Task OnAfterRenderAsync(bool firstRender)
             {
+            Console.WriteLine($"OnAfterRenderAsync({firstRender})");
             if (firstRender)
                 {
                 await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<ImageViewer>(this));
                 this.imageInfos = await HttpClient.GetFromJsonAsync<ImageInfo[]>(FileName + ".json");
                 await OnResize();
                 await this.containerDiv.FocusAsync();
+                this.startImageFetch = DateTime.Now;
+                StartRandomRectangles();
                 }
             }
 
@@ -140,6 +170,17 @@ namespace Portfolio.Client.Pages
         private void ZoomPlus(int delta)
             {
             ZoomTo(this.zoom + ((double) delta / 100.0));
+            }
+
+        private async Task ZoomIn()
+            {
+            ZoomBy(2.0);
+            await DrawCanvas();
+            }
+        private async Task ZoomOut()
+            {
+            ZoomBy(0.5);
+            await DrawCanvas();
             }
 
         private void ZoomBy(double scale)
@@ -209,8 +250,12 @@ namespace Portfolio.Client.Pages
             {
             if ((this.imageNativeSize.Width > 0) && (this.imageNativeSize.Height > 0))
                 {
+                Console.WriteLine("DrawCanvas()");
 
-                this._context = await this.canvas.CreateCanvas2DAsync();
+                if (this._context == null)
+                    {
+                    this._context = await this.canvas.CreateCanvas2DAsync();
+                    }
 
                 await this._context.BeginBatchAsync();
                 await this._context.ClearRectAsync(0, 0, this.canvasSize.Width, this.canvasSize.Height);
@@ -280,15 +325,15 @@ namespace Portfolio.Client.Pages
                 StateHasChanged();
                 this.startImageFetch = DateTime.Now;
 
-                // Prefetch the next image while the current one is being viewed.
-                if (this.currentImageIndex + 1 < this.imageInfos.Length)
-                    await JSRuntime.InvokeVoidAsync("PrefetchImage", this.imageInfos[this.currentImageIndex + 1].Source);
-                }
-            }
+                StartRandomRectangles();
 
-        private async Task Back()
-            {
-            await JSRuntime.InvokeVoidAsync("GoBack");
+                // Prefetch the next image while the current one is being viewed.
+                String nextImage = FullImagePath(this.currentImageIndex + 1);
+                if (!String.IsNullOrEmpty(nextImage))
+                    {
+                    await JSRuntime.InvokeVoidAsync("PrefetchImage", nextImage);
+                    }
+                }
             }
         private async Task Previous()
             {
@@ -299,7 +344,62 @@ namespace Portfolio.Client.Pages
                     this.currentImageIndex = this.imageInfos.Length - 1;
                 StateHasChanged();
                 this.startImageFetch = DateTime.Now;
+
+                StartRandomRectangles();
                 }
+            }
+
+        Timer randomRectanglesTimer = null;
+        private void StartRandomRectangles()
+            {
+            int millis = 10;
+            this.randomRectanglesTimer = new Timer(RandomRectangle, null, 250, 25);
+            }
+
+        private void StopRandomRectangles()
+            {
+            if (this.randomRectanglesTimer != null)
+                {
+                this.randomRectanglesTimer.Dispose();
+                this.randomRectanglesTimer = null;
+                }
+            }
+
+        private void RandomRectangle(Object obj)
+            {
+            InvokeAsync(RandomRectangleAsync);
+            }
+
+        private async void RandomRectangleAsync()
+            {
+            if (this._context == null)
+                {
+                this._context = await this.canvas.CreateCanvas2DAsync();
+                }
+
+            await this._context.BeginBatchAsync();
+            Random random = new Random();
+            Size margin = new Size() { Width = 25, Height = 25 };
+            int width = random.Next(15, 150);
+            int height = random.Next(15, 150);
+            int x = random.Next(margin.Width, this.canvasSize.Width - (margin.Width + width));
+            int y= random.Next(margin.Height, this.canvasSize.Height - (margin.Height + height));
+            int color = random.Next(0, 0xFFFFFF);
+            await this._context.SetFillStyleAsync($"#{color:X6}");
+            await this._context.FillRectAsync(x, y, width, height);
+            await this._context.EndBatchAsync();
+            }
+
+        private async Task Back()
+            {
+            await JSRuntime.InvokeVoidAsync("GoBack");
+            }
+
+        private void ShowImage(int index)
+            {
+            this.currentImageIndex = index;
+            StateHasChanged();
+            this.startImageFetch = DateTime.Now;
             }
 
         private async Task OnKeyDown(KeyboardEventArgs args)
@@ -321,11 +421,11 @@ namespace Portfolio.Client.Pages
 
                     case "+":
                     case "=":
-                        ZoomBy(2.0);
+                        ZoomIn();
                         break;
 
                     case "-":
-                        ZoomBy(0.5);
+                        ZoomOut();
                         break;
 
                     case "c":
@@ -531,6 +631,13 @@ namespace Portfolio.Client.Pages
             return (frameIndex == 0) || (frameIndex == this.keyFrameCount - 1);
             }
 
+        private String TransportControlsClass
+            {
+            get
+                {
+                return (this.keyFrameCount > 1) ? "" : "hidden";
+                }
+            }
         private void GenerateKeyFrames()
             {
             ImageInfo curImageInfo = this.imageInfos[this.currentImageIndex];
@@ -693,12 +800,48 @@ namespace Portfolio.Client.Pages
                 }
             }
 
+        private void OnMouseOverGallery(MouseEventArgs args)
+            {
+            this.galleryVisible = true;
+            StateHasChanged();
+            }
+        private void OnMouseOutGallery(MouseEventArgs args)
+            {
+            this.galleryVisible = false;
+            StateHasChanged();
+            }
+
+        DateTime lastWheelXAction = DateTime.Now;
         private async Task OnMouseWheel(WheelEventArgs args)
             {
-            ZoomPlus((int) -args.DeltaY);
-            SetAnchor((int)args.OffsetX, (int)args.OffsetY, true);
+            if (Math.Abs(args.DeltaY) > 4)
+                {
+                ZoomPlus((int) -args.DeltaY);
+                SetAnchor((int)args.OffsetX, (int)args.OffsetY, true);
 
-            await DrawCanvas();
+                await DrawCanvas();
+                }
+            else if (Math.Abs(args.DeltaX) > 100)
+                {
+                //Console.WriteLine($"Wheel - DeltaX = {args.DeltaX}");
+                DateTime now = DateTime.Now;
+
+                if (now > this.lastWheelXAction.AddMilliseconds(500))
+                    {
+                    this.lastWheelXAction = now;
+
+                    if (args.DeltaX > 0)
+                        {
+                        //Console.WriteLine("Wheel - Next()");
+                        await Next();
+                        }
+                    else
+                        {
+                        //Console.WriteLine("Wheel - Previous()");
+                        await Previous();
+                        }
+                    }
+                }
             }
         private void FitImageToCanvas()
             {
@@ -772,20 +915,15 @@ namespace Portfolio.Client.Pages
             DateTime finish = DateTime.Now;
             this.imageLoadTime = finish - this.startImageFetch;
 
+            StopRandomRectangles();
+            Console.WriteLine($"OnImageLoaded() - {this.currentImageIndex}");
+
             this.imageNativeSize = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRef);
             GenerateKeyFrames();
             if (this.keyFrameCount > 0)
                 {
                 await Play();
                 }
-#if false
-            else
-                {
-                FitImageToCanvas();
-                }
-            ComputeImageDisplayRect();
-            await DrawCanvas();
-#endif
             }
 
         [JSInvokable]

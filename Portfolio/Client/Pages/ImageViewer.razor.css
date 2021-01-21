@@ -1,8 +1,12 @@
 ﻿
     .hidden
     {
-        display: none;
         visibility: hidden;
+    }
+
+    .display-none
+    {
+        display: none;
     }
 
     .noselect
@@ -26,6 +30,11 @@
     .media-control
     {
         padding-left: 20px;
+    }
+
+    .no-touch
+    {
+        touch-action:none;
     }
 
     .l-container
@@ -84,11 +93,10 @@
 
     .bar-overlay
     {
-        background: rgb(0, 0, 0);
         background: rgba(0, 0, 0, 0.60); /* Black see-through */
         transition: .5s ease;
         opacity: 0;
-        font-size: 40px;
+        font-size: 25px;
         padding: 10px;
         text-align: center;
     }
@@ -101,8 +109,31 @@
     .bar-text
     {
         color: white;
-        font-size: 30px;
+        font-size: 25px;
         padding-left: 20px;
+    }
+
+    .zoom
+    {
+        padding: 4px;
+    }
+
+    .zoom > span
+    {
+        padding: 4px;
+        color: white;
+    }
+
+    .gallery
+    {
+        background: rgba(0, 0, 0, 0.60); /* Black see-through */
+        /*background-color:white;*/
+        transition: .5s ease;
+        font-size: 40px;
+        padding: 10px;
+        text-align: center;
+        width: 100%;
+        overflow-x:auto;
     }
 
     .flex-row

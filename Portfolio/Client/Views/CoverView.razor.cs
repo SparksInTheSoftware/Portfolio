@@ -18,6 +18,7 @@ namespace Portfolio.Client.Views
         {
         [Inject] IJSRuntime JSRuntime { get; set; }
         [Inject] NavigationManager NavigationManager { get; set; }
+        [Inject] AppData AppData { get; set; }
 
         private ElementReference containerDiv;
 
@@ -358,6 +359,7 @@ namespace Portfolio.Client.Views
             {
             if (!this.ignoreClick)
                 {
+                AppData.CurrentPortfolioInfo = PortfolioInfo;
                 NavigationManager.NavigateTo($"ImageViewer\\{PortfolioInfo.Name}");
                 }
             }

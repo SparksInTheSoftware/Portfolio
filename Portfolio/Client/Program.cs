@@ -19,6 +19,8 @@ namespace Portfolio.Client
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
+            builder.Services.AddSingleton<AppData>(sp => new AppData());
+
             await builder.Build().RunAsync();
             }
         }

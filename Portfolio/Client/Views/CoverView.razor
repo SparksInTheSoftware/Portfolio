@@ -9,7 +9,7 @@
 }
 </style>
 
-<div @ref="containerDiv" class="thumbnail-array" @onmousedown="OnMouseDown" @onclick="OnClick" style="min-width: @(CoverSize.Width)px;height: 95%;">
+<div @ref="containerDiv" class="thumbnail-array" @onmousedown="OnMouseDown" @onclick="OnClick" style="min-width: @(CoverSize.Width)px;height: 90%;">
     <div class="hidden">
         <img @ref="imageRef0" src="@FileName(0)" @onload="OnImageLoaded0"/>
         <img @ref="imageRef1" src="@FileName(1)" @onload="OnImageLoaded1"/>
@@ -18,4 +18,5 @@
         <img @ref="imageRef4" src="@FileName(4)" @onload="OnImageLoaded4"/>
     </div>
     <Canvas @ref="canvas"/>
+    <div style="color:white;width:100%;text-align:center;">@PortfolioInfo.Name</div>
 </div>

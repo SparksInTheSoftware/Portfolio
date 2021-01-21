@@ -33,6 +33,7 @@
         <div class="flex-row">
             <div class="left-25px flex-row">
                 <span class="bar-text">@ImageNumber</span>
+                <span class="bar-text" @onclick="ToggleHD">@HD</span>
             </div>
             <div class="center-horizontal @TransportControlsClass">
                 <span class="oi media-control oi-media-skip-backward overlay-icon" aria-hidden="true" @onclick="OnSkipBackward"> </span>
@@ -42,7 +43,7 @@
                 <span class="oi media-control oi-media-skip-forward overlay-icon" aria-hidden="true" @onclick="OnSkipForward"> </span>
                 <span class="bar-text">@FrameInfo</span>
             </div>
-            <div class="left-25px flex-row zoom">
+            <div class="left-25px zoom">
                 <span class="oi oi-minus overlay-icon" @onclick="ZoomOut"/>
                 <span class="">@Zoom</span>
                 <span class="oi oi-plus overlay-icon" @onclick="ZoomIn"/>

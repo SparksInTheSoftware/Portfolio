@@ -45,6 +45,19 @@ namespace Portfolio.Client.Pages
                 }
             }
 
+        private String HD
+            {
+            get
+                {
+                return AppData.HD ? "HD" : "LOW";
+                }
+            }
+
+        private void ToggleHD()
+            {
+            AppData.HD = !AppData.HD;
+            StateHasChanged();
+            }
         private String ImageNumber
             {
             get
@@ -98,7 +111,7 @@ namespace Portfolio.Client.Pages
             {
                 if (index < AppData?.CurrentPortfolioInfo?.FileNames?.Count)
                     {
-                    return FullImagePath("full", index);
+                    return FullImagePath(AppData.HD ? "full" : "low", index);
                     }
 
                 return "";

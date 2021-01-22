@@ -16,6 +16,7 @@ namespace Portfolio.Client.Pages
         {
         [Inject] IJSRuntime JSRuntime { get; set; }
         [Inject] HttpClient HttpClient { get; set; }
+        [Inject] AppData AppData { get; set; }
 
         private ElementReference containerDiv;
 
@@ -37,7 +38,8 @@ namespace Portfolio.Client.Pages
             if (firstRender)
                 {
                 await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<Portfolios>(this));
-                this.portfolioInfos = await HttpClient.GetFromJsonAsync<PortfolioInfo[]>("portfolios.json");
+                AppData.HttpClient = HttpClient;
+                this.portfolioInfos = await AppData.GetPortfolioInfos();
                 StateHasChanged();
                 await this.containerDiv.FocusAsync();
                 }

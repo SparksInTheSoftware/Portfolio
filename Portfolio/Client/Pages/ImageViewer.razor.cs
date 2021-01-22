@@ -30,6 +30,8 @@ namespace Portfolio.Client.Pages
         [Parameter]
         public String FileName { get; set; }
 
+        private PortfolioInfo portfolioInfo = null;
+
         private ElementReference containerDiv;
         private ElementReference imageRef;
         private Canvas canvas;
@@ -62,9 +64,9 @@ namespace Portfolio.Client.Pages
             {
             get
                 {
-                if (AppData.CurrentPortfolioInfo?.FileNames?.Count > 0)
+                if (this.portfolioInfo?.FileNames?.Count > 0)
                     {
-                    return $"{this.currentImageIndex + 1} / {AppData.CurrentPortfolioInfo.FileNames.Count}";
+                    return $"{this.currentImageIndex + 1} / {this.portfolioInfo.FileNames.Count}";
                     }
 
                 return "";
@@ -103,15 +105,15 @@ namespace Portfolio.Client.Pages
 
         private String FullImagePath(String subFolder, int index)
             {
-            String path = AppData.CurrentPortfolioInfo.RootPath;
-            String fileName = AppData.CurrentPortfolioInfo.FileNames[index];
+            String path = this.portfolioInfo.RootPath;
+            String fileName = this.portfolioInfo.FileNames[index];
 
             return $"{path}/{subFolder}/{fileName}";
             }
 
         private String FullImagePath(int index)
             {
-                if (index < AppData?.CurrentPortfolioInfo?.FileNames?.Count)
+                if (index < this.portfolioInfo?.FileNames?.Count)
                     {
                     return FullImagePath(AppData.HD ? "full" : "low", index);
                     }
@@ -144,9 +146,10 @@ namespace Portfolio.Client.Pages
         private Canvas2DContext _context;
         protected override async Task OnAfterRenderAsync(bool firstRender)
             {
-            Console.WriteLine($"OnAfterRenderAsync({firstRender})");
             if (firstRender)
                 {
+                AppData.HttpClient = HttpClient;
+                this.portfolioInfo = await AppData.GetPortfolioInfo(FileName);
                 await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<ImageViewer>(this));
                 await OnResize();
                 await this.containerDiv.FocusAsync();
@@ -263,7 +266,6 @@ namespace Portfolio.Client.Pages
             {
             if ((this.imageNativeSize.Width > 0) && (this.imageNativeSize.Height > 0))
                 {
-                Console.WriteLine("DrawCanvas()");
 
                 if (this._context == null)
                     {
@@ -330,10 +332,10 @@ namespace Portfolio.Client.Pages
         TimeSpan imageLoadTime;
         private async Task Next()
             {
-            if (AppData.CurrentPortfolioInfo?.FileNames?.Count > 0)
+            if (this.portfolioInfo?.FileNames?.Count > 0)
                 {
                 this.currentImageIndex++;
-                if (this.currentImageIndex >= AppData.CurrentPortfolioInfo?.FileNames?.Count)
+                if (this.currentImageIndex >= this.portfolioInfo?.FileNames?.Count)
                     this.currentImageIndex = 0;
                 StateHasChanged();
                 this.startImageFetch = DateTime.Now;
@@ -350,11 +352,11 @@ namespace Portfolio.Client.Pages
             }
         private async Task Previous()
             {
-            if (AppData.CurrentPortfolioInfo?.FileNames?.Count > 0)
+            if (this.portfolioInfo?.FileNames?.Count > 0)
                 {
                 this.currentImageIndex--;
                 if (this.currentImageIndex < 0)
-                    this.currentImageIndex = AppData.CurrentPortfolioInfo.FileNames.Count - 1;
+                    this.currentImageIndex = this.portfolioInfo.FileNames.Count - 1;
                 StateHasChanged();
                 this.startImageFetch = DateTime.Now;
 
@@ -583,7 +585,7 @@ namespace Portfolio.Client.Pages
             this.keyFrames = null; // Will need to do InfillKeyFrames() again.
             this.keyFrameCount = 0;
 
-            Animation animation = AppData.CurrentPortfolioInfo.GetAnimation(this.currentImageIndex, true);
+            Animation animation = this.portfolioInfo.GetAnimation(this.currentImageIndex, true);
             animation.KeyFrameCanvasSize = this.canvasSize;
 
             Rectangle rectangle = this.imageDisplayRect;
@@ -653,7 +655,7 @@ namespace Portfolio.Client.Pages
             }
         private void GenerateKeyFrames()
             {
-            Animation animation = AppData.CurrentPortfolioInfo.GetAnimation(this.currentImageIndex);
+            Animation animation = this.portfolioInfo.GetAnimation(this.currentImageIndex);
             this.keyFrameCount = 0;
             this.currentKeyFrameIndex = 0;
             this.keyFrames = null;
@@ -771,7 +773,7 @@ namespace Portfolio.Client.Pages
         private async Task SerializePortfolioInfo()
             {
             JsonSerializerOptions opts = new() { WriteIndented = true };
-            String s = JsonSerializer.Serialize<PortfolioInfo>(AppData.CurrentPortfolioInfo, opts);
+            String s = JsonSerializer.Serialize<PortfolioInfo>(this.portfolioInfo, opts);
             await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", s);
             }
 
@@ -834,7 +836,6 @@ namespace Portfolio.Client.Pages
                 }
             else if (Math.Abs(args.DeltaX) > 100)
                 {
-                //Console.WriteLine($"Wheel - DeltaX = {args.DeltaX}");
                 DateTime now = DateTime.Now;
 
                 if (now > this.lastWheelXAction.AddMilliseconds(500))
@@ -843,12 +844,10 @@ namespace Portfolio.Client.Pages
 
                     if (args.DeltaX > 0)
                         {
-                        //Console.WriteLine("Wheel - Next()");
                         await Next();
                         }
                     else
                         {
-                        //Console.WriteLine("Wheel - Previous()");
                         await Previous();
                         }
                     }
@@ -927,7 +926,6 @@ namespace Portfolio.Client.Pages
             this.imageLoadTime = finish - this.startImageFetch;
 
             StopRandomRectangles();
-            Console.WriteLine($"OnImageLoaded() - {this.currentImageIndex}");
 
             this.imageNativeSize = await JSRuntime.InvokeAsync<Size>("GetNaturalSize", this.imageRef);
             GenerateKeyFrames();

@@ -44,107 +44,7 @@
       "DSC01344.01.jpg",
       "DSC01348.01.jpg"
     ],
-    "Animations": {
-      "DSC01316.01.jpg": {
-        "KeyFrameCanvasSize": {
-          "IsEmpty": false,
-          "Width": 1242,
-          "Height": 599
-        },
-        "KeyFrames": [
-          {
-            "Rectangle": {
-              "X": -1374,
-              "Y": -1100,
-              "Width": 3918,
-              "Height": 2615
-            },
-            "FrameNumber": 0
-          },
-          {
-            "Rectangle": {
-              "X": 173,
-              "Y": 0,
-              "Width": 897,
-              "Height": 599
-            },
-            "FrameNumber": 60
-          }
-        ]
-      },
-      "DSC01340.01.jpg": {
-        "KeyFrameCanvasSize": {
-          "IsEmpty": false,
-          "Width": 1118,
-          "Height": 525
-        },
-        "KeyFrames": [
-          {
-            "Rectangle": {
-              "X": -3060,
-              "Y": 0,
-              "Width": 4575,
-              "Height": 3157
-            },
-            "FrameNumber": 0
-          },
-          {
-            "Rectangle": {
-              "X": -298,
-              "Y": -323,
-              "Width": 1523,
-              "Height": 1051
-            },
-            "FrameNumber": 60
-          },
-          {
-            "Rectangle": {
-              "X": 179,
-              "Y": 0,
-              "Width": 760,
-              "Height": 525
-            },
-            "FrameNumber": 120
-          }
-        ]
-      },
-      "DSC01334.01.jpg": {
-        "KeyFrameCanvasSize": {
-          "IsEmpty": false,
-          "Width": 1118,
-          "Height": 525
-        },
-        "KeyFrames": [
-          {
-            "Rectangle": {
-              "X": -2376,
-              "Y": -956,
-              "Width": 6180,
-              "Height": 4108
-            },
-            "FrameNumber": 0
-          },
-          {
-            "Rectangle": {
-              "X": -102,
-              "Y": -19,
-              "Width": 1220,
-              "Height": 811
-            },
-            "FrameNumber": 60
-          },
-          {
-            "Rectangle": {
-              "X": 165,
-              "Y": 0,
-              "Width": 789,
-              "Height": 525
-            },
-            "FrameNumber": 120
-          }
-        ]
-      }
-    }
+    "Animations": null
   },
   {
     "Name": "2020-01-11 - Snoqualmie River",
@@ -161,7 +61,11 @@
       "DSC01353.jpg",
       "DSC01354.jpg",
       "DSC01359.jpg",
+      "DSC01361.jpg",
+      "DSC01362.jpg",
       "DSC01366.jpg",
+      "DSC01367.jpg",
+      "DSC01368.jpg",
       "DSC01370.jpg",
       "DSC01371.jpg",
       "DSC01373.jpg"

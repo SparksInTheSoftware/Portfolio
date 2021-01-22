@@ -9,6 +9,6 @@ namespace Portfolio.Client
         {
         public PortfolioInfo CurrentPortfolioInfo { get; set; }
 
-        public bool HD { get; set; } = true;
+        public bool HD { get; set; } = false;
         }
     }

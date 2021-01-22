@@ -49,7 +49,7 @@ namespace Portfolio.Client.Pages
             {
             get
                 {
-                return AppData.HD ? "HD" : "LOW";
+                return AppData.HD ? "HD" : "SD";
                 }
             }
 

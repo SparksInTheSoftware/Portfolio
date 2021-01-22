@@ -8,13 +8,11 @@ using System.Threading.Tasks;
 
 namespace Portfolio.Client
     {
-    public class ImageInfo
+    public class Animation
         {
-        public String Source { get; set; }
         public Size KeyFrameCanvasSize { get; set; }
         public List<KeyFrame> KeyFrames { get; set; }
         }
-
     public class KeyFrame
         {
         [JsonConverter(typeof(RectangleJsonConverter))]

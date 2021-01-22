@@ -18,9 +18,9 @@
     <div class="bar-overlay l-top" style="min-height:10px;width:100%;" @onmouseover="OnMouseOverGallery" @onmouseout="OnMouseOutGallery">
         <div class="@galleryClass">
             <div class="flex-row">
-                @if (this.imageInfos != null)
+                @if (AppData.CurrentPortfolioInfo?.FileNames?.Count > 0)
                     {
-                    for (int i = 0;  i < imageInfos.Length; i++)
+                    for (int i = 0; i < AppData.CurrentPortfolioInfo?.FileNames?.Count;  i++)
                         {
                         int hack = i;  // need to capture current value of i for delegate below.
                         <img src="@FullThumbnailPath(i)" width="150" height="150" style="margin:10px;" @onclick="() => ShowImage(hack)" />

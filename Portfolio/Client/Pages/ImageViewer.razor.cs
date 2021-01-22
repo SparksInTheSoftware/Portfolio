@@ -62,10 +62,12 @@ namespace Portfolio.Client.Pages
             {
             get
                 {
-                if (this.imageInfos == null)
-                    return "";
+                if (AppData.CurrentPortfolioInfo?.FileNames?.Count > 0)
+                    {
+                    return $"{this.currentImageIndex + 1} / {AppData.CurrentPortfolioInfo.FileNames.Count}";
+                    }
 
-                return $"{this.currentImageIndex + 1} / {this.imageInfos.Length}";
+                return "";
                 }
             }
 
@@ -121,7 +123,6 @@ namespace Portfolio.Client.Pages
             return FullImagePath("1x1", index);
             }
 
-        private ImageInfo[] imageInfos;
         private int currentImageIndex = 0;
 
         private KeyFrame[] keyFrames;
@@ -147,7 +148,6 @@ namespace Portfolio.Client.Pages
             if (firstRender)
                 {
                 await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<ImageViewer>(this));
-                this.imageInfos = await HttpClient.GetFromJsonAsync<ImageInfo[]>(FileName + ".json");
                 await OnResize();
                 await this.containerDiv.FocusAsync();
                 this.startImageFetch = DateTime.Now;
@@ -330,10 +330,10 @@ namespace Portfolio.Client.Pages
         TimeSpan imageLoadTime;
         private async Task Next()
             {
-            if (this.imageInfos?.Length > 0)
+            if (AppData.CurrentPortfolioInfo?.FileNames?.Count > 0)
                 {
                 this.currentImageIndex++;
-                if (this.currentImageIndex >= this.imageInfos.Length)
+                if (this.currentImageIndex >= AppData.CurrentPortfolioInfo?.FileNames?.Count)
                     this.currentImageIndex = 0;
                 StateHasChanged();
                 this.startImageFetch = DateTime.Now;
@@ -350,11 +350,11 @@ namespace Portfolio.Client.Pages
             }
         private async Task Previous()
             {
-            if (this.imageInfos?.Length > 0)
+            if (AppData.CurrentPortfolioInfo?.FileNames?.Count > 0)
                 {
                 this.currentImageIndex--;
                 if (this.currentImageIndex < 0)
-                    this.currentImageIndex = this.imageInfos.Length - 1;
+                    this.currentImageIndex = AppData.CurrentPortfolioInfo.FileNames.Count - 1;
                 StateHasChanged();
                 this.startImageFetch = DateTime.Now;
 
@@ -442,7 +442,7 @@ namespace Portfolio.Client.Pages
                         break;
 
                     case "c":
-                        CopyImageInfo();
+                        await SerializePortfolioInfo();
                         break;
                     }
                 await DrawCanvas();
@@ -583,30 +583,30 @@ namespace Portfolio.Client.Pages
             this.keyFrames = null; // Will need to do InfillKeyFrames() again.
             this.keyFrameCount = 0;
 
-            ImageInfo curImageInfo = this.imageInfos[this.currentImageIndex];
-            curImageInfo.KeyFrameCanvasSize = this.canvasSize;
+            Animation animation = AppData.CurrentPortfolioInfo.GetAnimation(this.currentImageIndex, true);
+            animation.KeyFrameCanvasSize = this.canvasSize;
 
             Rectangle rectangle = this.imageDisplayRect;
 
             KeyFrame keyFrame;
 
-            if (curImageInfo.KeyFrames == null)
+            if (animation.KeyFrames == null)
                 {
-                curImageInfo.KeyFrames = new ();
+                animation.KeyFrames = new ();
                 }
 
             // All the frames between the current last frame and iFrame are filled with the current rectangle.
-            while (iFrame >= curImageInfo.KeyFrames.Count)
+            while (iFrame >= animation.KeyFrames.Count)
                 {
-                int newIndex = curImageInfo.KeyFrames.Count;
+                int newIndex = animation.KeyFrames.Count;
                 keyFrame = new KeyFrame()
                     {
                     Rectangle = rectangle,
                     FrameNumber = fps * newIndex
                     };
-                curImageInfo.KeyFrames.Add(keyFrame);
+                animation.KeyFrames.Add(keyFrame);
                 }
-            keyFrame = curImageInfo.KeyFrames[iFrame];
+            keyFrame = animation.KeyFrames[iFrame];
             keyFrame.Rectangle = rectangle;
             keyFrame.FrameNumber = fps * iFrame;
             }
@@ -653,19 +653,19 @@ namespace Portfolio.Client.Pages
             }
         private void GenerateKeyFrames()
             {
-            ImageInfo curImageInfo = this.imageInfos[this.currentImageIndex];
+            Animation animation = AppData.CurrentPortfolioInfo.GetAnimation(this.currentImageIndex);
             this.keyFrameCount = 0;
             this.currentKeyFrameIndex = 0;
             this.keyFrames = null;
             double scale = 1.0;
 
             FitImageToCanvas();
-            if (curImageInfo.KeyFrames?.Count > 0)
+            if (animation?.KeyFrames?.Count > 0)
                 {
-                if (this.canvasSize != curImageInfo.KeyFrameCanvasSize)
+                if (this.canvasSize != animation.KeyFrameCanvasSize)
                     {
-                    double widthScale = ((double)this.canvasSize.Width) / curImageInfo.KeyFrameCanvasSize.Width;
-                    double heightScale = ((double) this.canvasSize.Height) / curImageInfo.KeyFrameCanvasSize.Height;
+                    double widthScale = ((double)this.canvasSize.Width) / animation.KeyFrameCanvasSize.Width;
+                    double heightScale = ((double) this.canvasSize.Height) / animation.KeyFrameCanvasSize.Height;
 
                     // Pick the scale that's closest to 1.0
                     double widthDistance = Math.Abs(1.0 - widthScale);
@@ -674,7 +674,7 @@ namespace Portfolio.Client.Pages
                     }
 
                 int maxFrameNumber = 0;
-                foreach (KeyFrame keyFrame in curImageInfo.KeyFrames)
+                foreach (KeyFrame keyFrame in animation.KeyFrames)
                     {
                     if (keyFrame.FrameNumber > maxFrameNumber)
                         {
@@ -685,7 +685,7 @@ namespace Portfolio.Client.Pages
                 this.keyFrameCount = maxFrameNumber + 1;  // Start counting frames at zero
                 this.keyFrames = new KeyFrame[this.keyFrameCount];
                 KeyFrame previousKeyFrame = null;
-                foreach (KeyFrame keyFrame in curImageInfo.KeyFrames)
+                foreach (KeyFrame keyFrame in animation.KeyFrames)
                     {
                     KeyFrame scaledKeyFrame = Scale(keyFrame, scale);
                     if (previousKeyFrame != null)
@@ -768,13 +768,11 @@ namespace Portfolio.Client.Pages
                 }
             }
 
-        private void CopyImageInfo()
+        private async Task SerializePortfolioInfo()
             {
-
             JsonSerializerOptions opts = new() { WriteIndented = true };
-            String s = JsonSerializer.Serialize<ImageInfo[]>(this.imageInfos, opts);
-            Console.WriteLine("ImageInfos:");
-            Console.WriteLine(s);
+            String s = JsonSerializer.Serialize<PortfolioInfo>(AppData.CurrentPortfolioInfo, opts);
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", s);
             }
 
         private void SetAnchor(int x, int y, bool setImageAnchor)

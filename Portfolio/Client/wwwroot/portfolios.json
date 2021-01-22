@@ -1,8 +1,184 @@
 [
   {
+    "Name": "2020-01-07 - Seattle",
+    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-07 - Seattle",
+    "CoverStyle": 2,
+    "ImageIndexes": [
+      2,
+      1,
+      4,
+      3,
+      5
+    ],
+    "FileNames": [
+      "DSC01548.jpg",
+      "DSC01550.jpg",
+      "DSC01552.jpg",
+      "DSC01553.jpg",
+      "DSC01554.jpg",
+      "DSC01556.jpg",
+      "DSC01569.jpg",
+      "DSC01575.jpg"
+    ],
+    "Animations": null
+  },
+  {
+    "Name": "2020-01-10 - Saint Edward State Park",
+    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-10 - Saint Edward State Park",
+    "CoverStyle": 1,
+    "ImageIndexes": [
+      5,
+      1,
+      4,
+      8,
+      6
+    ],
+    "FileNames": [
+      "DSC01316.01.jpg",
+      "DSC01323.01.jpg",
+      "DSC01324.01.jpg",
+      "DSC01334.01.jpg",
+      "DSC01336.01.jpg",
+      "DSC01338.01.jpg",
+      "DSC01340.01.jpg",
+      "DSC01344.01.jpg",
+      "DSC01348.01.jpg"
+    ],
+    "Animations": {
+      "DSC01316.01.jpg": {
+        "KeyFrameCanvasSize": {
+          "IsEmpty": false,
+          "Width": 1242,
+          "Height": 599
+        },
+        "KeyFrames": [
+          {
+            "Rectangle": {
+              "X": -1374,
+              "Y": -1100,
+              "Width": 3918,
+              "Height": 2615
+            },
+            "FrameNumber": 0
+          },
+          {
+            "Rectangle": {
+              "X": 173,
+              "Y": 0,
+              "Width": 897,
+              "Height": 599
+            },
+            "FrameNumber": 60
+          }
+        ]
+      },
+      "DSC01340.01.jpg": {
+        "KeyFrameCanvasSize": {
+          "IsEmpty": false,
+          "Width": 1118,
+          "Height": 525
+        },
+        "KeyFrames": [
+          {
+            "Rectangle": {
+              "X": -3060,
+              "Y": 0,
+              "Width": 4575,
+              "Height": 3157
+            },
+            "FrameNumber": 0
+          },
+          {
+            "Rectangle": {
+              "X": -298,
+              "Y": -323,
+              "Width": 1523,
+              "Height": 1051
+            },
+            "FrameNumber": 60
+          },
+          {
+            "Rectangle": {
+              "X": 179,
+              "Y": 0,
+              "Width": 760,
+              "Height": 525
+            },
+            "FrameNumber": 120
+          }
+        ]
+      },
+      "DSC01334.01.jpg": {
+        "KeyFrameCanvasSize": {
+          "IsEmpty": false,
+          "Width": 1118,
+          "Height": 525
+        },
+        "KeyFrames": [
+          {
+            "Rectangle": {
+              "X": -2376,
+              "Y": -956,
+              "Width": 6180,
+              "Height": 4108
+            },
+            "FrameNumber": 0
+          },
+          {
+            "Rectangle": {
+              "X": -102,
+              "Y": -19,
+              "Width": 1220,
+              "Height": 811
+            },
+            "FrameNumber": 60
+          },
+          {
+            "Rectangle": {
+              "X": 165,
+              "Y": 0,
+              "Width": 789,
+              "Height": 525
+            },
+            "FrameNumber": 120
+          }
+        ]
+      }
+    }
+  },
+  {
+    "Name": "2020-01-11 - Snoqualmie River",
+    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-11 - Snoqualmie River",
+    "CoverStyle": 1,
+    "ImageIndexes": [
+      0,
+      2,
+      6,
+      4,
+      5
+    ],
+    "FileNames": [
+      "DSC01353.jpg",
+      "DSC01354.jpg",
+      "DSC01359.jpg",
+      "DSC01366.jpg",
+      "DSC01370.jpg",
+      "DSC01371.jpg",
+      "DSC01373.jpg"
+    ],
+    "Animations": null
+  },
+  {
     "Name": "2020-01-24 - Portland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-24 - Portland",
-    "CoverStyle": "1",
+    "CoverStyle": 2,
+    "ImageIndexes": [
+      1,
+      7,
+      3,
+      9,
+      4
+    ],
     "FileNames": [
       "DSC01444.jpg",
       "DSC01447.jpg",
@@ -20,57 +196,20 @@
       "DSC01470.jpg",
       "DSC01473.jpg",
       "DSC01474.jpg"
-    ]
-  },
-  {
-    "Name": "2020-01-07 - Seattle",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-07 - Seattle",
-    "CoverStyle": "2",
-    "FileNames": [
-      "DSC01548.jpg",
-      "DSC01550.jpg",
-      "DSC01552.jpg",
-      "DSC01553.jpg",
-      "DSC01554.jpg",
-      "DSC01556.jpg",
-      "DSC01569.jpg",
-      "DSC01575.jpg"
-    ]
-  },
-  {
-    "Name": "2020-01-10 - Saint Edward State Park",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-10 - Saint Edward State Park",
-    "CoverStyle": "3",
-    "FileNames": [
-      "DSC01316.01.jpg",
-      "DSC01323.01.jpg",
-      "DSC01324.01.jpg",
-      "DSC01334.01.jpg",
-      "DSC01336.01.jpg",
-      "DSC01338.01.jpg",
-      "DSC01340.01.jpg",
-      "DSC01344.01.jpg",
-      "DSC01348.01.jpg"
-    ]
-  },
-  {
-    "Name": "2020-01-11 - Snoqualmie River",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-11 - Snoqualmie River",
-    "CoverStyle": "1",
-    "FileNames": [
-      "DSC01353.jpg",
-      "DSC01354.jpg",
-      "DSC01359.jpg",
-      "DSC01366.jpg",
-      "DSC01370.jpg",
-      "DSC01371.jpg",
-      "DSC01373.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-01-25 - Portland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-25 - Portland",
-    "CoverStyle": "2",
+    "CoverStyle": 2,
+    "ImageIndexes": [
+      13,
+      5,
+      2,
+      3,
+      4
+    ],
     "FileNames": [
       "DSC01482.jpg",
       "DSC01484.jpg",
@@ -90,12 +229,20 @@
       "DSC01545.jpg",
       "DSC01546.jpg",
       "DSC01547.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-02-04 - Seattle Asian Art Museum",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-02-04 - Seattle Asian Art Museum",
-    "CoverStyle": "3",
+    "CoverStyle": 3,
+    "ImageIndexes": [
+      0,
+      1,
+      3,
+      11,
+      7
+    ],
     "FileNames": [
       "DSC01583.jpg",
       "DSC01592.jpg",
@@ -110,12 +257,20 @@
       "DSC01612.jpg",
       "DSC01614.jpg",
       "DSC01615.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-02-16 - Kirkland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-02-16 - Kirkland",
-    "CoverStyle": "1",
+    "CoverStyle": 1,
+    "ImageIndexes": [
+      6,
+      8,
+      7,
+      9,
+      10
+    ],
     "FileNames": [
       "DSC01647.01.jpg",
       "DSC01652.01.jpg",
@@ -128,12 +283,20 @@
       "DSC01661.01.jpg",
       "DSC01665.01.jpg",
       "DSC01666.01.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-03 - Chicago",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-03 - Chicago",
-    "CoverStyle": "2",
+    "CoverStyle": 2,
+    "ImageIndexes": [
+      12,
+      7,
+      8,
+      4,
+      11
+    ],
     "FileNames": [
       "DSC01670.jpg",
       "DSC01674.jpg",
@@ -149,12 +312,20 @@
       "DSC01704.05.jpg",
       "DSC01707.jpg",
       "DSC01709.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-04 - Kirkland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-04 - Kirkland",
-    "CoverStyle": "3",
+    "CoverStyle": 2,
+    "ImageIndexes": [
+      0,
+      1,
+      5,
+      3,
+      4
+    ],
     "FileNames": [
       "DSC01726.jpg",
       "DSC01730.jpg",
@@ -165,12 +336,20 @@
       "DSC01749.jpg",
       "DSC01753.jpg",
       "DSC01757.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-07-25 - Kirkland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-07-25 - Kirkland",
-    "CoverStyle": "1",
+    "CoverStyle": 1,
+    "ImageIndexes": [
+      7,
+      3,
+      0,
+      1,
+      4
+    ],
     "FileNames": [
       "DSC02041.jpg",
       "DSC02042.jpg",
@@ -180,12 +359,20 @@
       "DSC02047.jpg",
       "DSC02049.jpg",
       "DSC02050.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-08-26 - Seattle",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-08-26 - Seattle",
-    "CoverStyle": "3",
+    "CoverStyle": 2,
+    "ImageIndexes": [
+      1,
+      7,
+      8,
+      2,
+      10
+    ],
     "FileNames": [
       "DSC02125.jpg",
       "DSC02127.jpg",
@@ -202,12 +389,20 @@
       "DSC02153.jpg",
       "DSC02154.jpg",
       "DSC02158.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-09 - Kirkland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-09 - Kirkland",
-    "CoverStyle": "1",
+    "CoverStyle": 1,
+    "ImageIndexes": [
+      1,
+      5,
+      2,
+      7,
+      5
+    ],
     "FileNames": [
       "DSC02192.jpg",
       "DSC02193.jpg",
@@ -219,12 +414,20 @@
       "DSC02219.jpg",
       "DSC02225.jpg",
       "DSC02226.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-11-A - Kirkland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-11-A - Kirkland",
-    "CoverStyle": "2",
+    "CoverStyle": 3,
+    "ImageIndexes": [
+      0,
+      6,
+      2,
+      3,
+      7
+    ],
     "FileNames": [
       "DSC02238.jpg",
       "DSC02239.jpg",
@@ -237,12 +440,20 @@
       "DSC02288.jpg",
       "DSC02291.jpg",
       "DSC02435.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-11-B - Kirkland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-11-B - Kirkland",
-    "CoverStyle": "3",
+    "CoverStyle": 1,
+    "ImageIndexes": [
+      9,
+      8,
+      7,
+      1,
+      4
+    ],
     "FileNames": [
       "DSC02440.jpg",
       "DSC02443.jpg",
@@ -254,12 +465,20 @@
       "DSC02546.jpg",
       "DSC02548.jpg",
       "DSC02550.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-11-C - Kirkland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-11-C - Kirkland",
-    "CoverStyle": "1",
+    "CoverStyle": 2,
+    "ImageIndexes": [
+      2,
+      6,
+      0,
+      5,
+      1
+    ],
     "FileNames": [
       "DSC02552.jpg",
       "DSC02557.jpg",
@@ -271,12 +490,20 @@
       "DSC02613.jpg",
       "DSC02615.jpg",
       "DSC02617.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-12-A - Kirkland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-12-A - Kirkland",
-    "CoverStyle": "2",
+    "CoverStyle": 3,
+    "ImageIndexes": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
     "FileNames": [
       "DSC02624.jpg",
       "DSC02626.jpg",
@@ -289,12 +516,20 @@
       "DSC02643.jpg",
       "DSC02649.jpg",
       "DSC02650.jpg"
-    ]
+    ],
+    "Animations": null
   },
   {
     "Name": "2020-12-B - Kirkland",
     "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-12-B - Kirkland",
-    "CoverStyle": "3",
+    "CoverStyle": 3,
+    "ImageIndexes": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
     "FileNames": [
       "DSC02651.jpg",
       "DSC02652.jpg",
@@ -306,6 +541,7 @@
       "DSC02679.jpg",
       "DSC02686.jpg",
       "DSC02687.jpg"
-    ]
+    ],
+    "Animations": null
   }
 ]

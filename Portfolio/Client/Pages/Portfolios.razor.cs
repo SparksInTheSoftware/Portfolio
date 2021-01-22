@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Portfolio.Client.Pages
@@ -49,6 +50,44 @@ namespace Portfolio.Client.Pages
                 {
                 await coverView.OnResize();
                 }
+            }
+
+        private async Task OnKeyDown(KeyboardEventArgs args)
+            {
+            if (args.CtrlKey)
+                {
+                switch (args.Key)
+                    {
+                    default:
+                        return;
+
+                    case "c":
+                        await SerializePortfolioInfos();
+                        break;
+                    }
+                }
+            else if (args.ShiftKey)
+                {
+                }
+            else if (args.AltKey)
+                {
+                }
+            else
+                {
+                switch (args.Key)
+                    {
+                    default:
+                        return;
+                    }
+                }
+            }
+
+        private async Task SerializePortfolioInfos()
+            {
+            JsonSerializerOptions opts = new() { WriteIndented = true };
+            String s = JsonSerializer.Serialize<PortfolioInfo[]>(PortfolioInfos, opts);
+
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", s);
             }
         }
     }

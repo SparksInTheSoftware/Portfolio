@@ -28,7 +28,10 @@ namespace Portfolio.Client.Pages
         [Inject] AppData AppData { get; set; }
 
         [Parameter]
-        public String FileName { get; set; }
+        public String Name { get; set; }
+
+        [Parameter]
+        public int? ImageIndex { get; set; }
 
         private PortfolioInfo portfolioInfo = null;
 
@@ -149,7 +152,15 @@ namespace Portfolio.Client.Pages
             if (firstRender)
                 {
                 AppData.HttpClient = HttpClient;
-                this.portfolioInfo = await AppData.GetPortfolioInfo(FileName);
+                this.portfolioInfo = await AppData.GetPortfolioInfo(Name);
+                this.currentImageIndex = 0;
+                if (ImageIndex.HasValue)
+                    {
+                    if ((ImageIndex.Value >= 0) && (ImageIndex.Value < this.portfolioInfo?.FileNames?.Count))
+                        {
+                        this.currentImageIndex = ImageIndex.Value;
+                        }
+                    }
                 await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<ImageViewer>(this));
                 await OnResize();
                 await this.containerDiv.FocusAsync();

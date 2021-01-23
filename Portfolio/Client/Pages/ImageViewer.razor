@@ -1,4 +1,5 @@
-﻿@page "/ImageViewer/{FileName}"
+﻿@page "/ImageViewer/{Name}"
+@page "/ImageViewer/{Name}/{ImageIndex:int?}"
 
 <img @ref="imageRef" src="@CurFileName" class="display-none" @onload="OnImageLoaded"/>
 <div @ref="containerDiv" class="l-container noselect no-touch" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation tabindex="0">

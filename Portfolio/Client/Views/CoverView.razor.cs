@@ -353,12 +353,13 @@ namespace Portfolio.Client.Views
             await DrawImage(index);
             }
 
+        private int imageIndex = 0;
         private bool ignoreClick = false;
         protected void OnClick()
             {
             if (!this.ignoreClick)
                 {
-                NavigationManager.NavigateTo($"ImageViewer\\{PortfolioInfo.Name}");
+                NavigationManager.NavigateTo($"ImageViewer\\{PortfolioInfo.Name}\\{this.imageIndex}");
                 }
             }
 
@@ -403,6 +404,12 @@ namespace Portfolio.Client.Views
             else
                 {
                 this.ignoreClick = false;
+                this.imageIndex = 0;
+                int rectIndex = RectangleIndexAt((int) args.OffsetX, (int) args.OffsetY);
+                if (rectIndex != -1)
+                    {
+                    this.imageIndex = PortfolioInfo.ImageIndexes[rectIndex];
+                    }
                 }
             }
 

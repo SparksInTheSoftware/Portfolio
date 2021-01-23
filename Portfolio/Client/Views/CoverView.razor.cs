@@ -457,7 +457,7 @@ namespace Portfolio.Client.Views
                 rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
 
             await this.canvas2Dcontext.BeginPathAsync();
-            await this.canvas2Dcontext.SetStrokeStyleAsync("gray");
+            await this.canvas2Dcontext.SetStrokeStyleAsync("#2C3539");
             await this.canvas2Dcontext.SetLineWidthAsync(2);
             await this.canvas2Dcontext.RectAsync(rectangle.Left, rectangle.Top, rectangle.Width, rectangle.Height);
             await this.canvas2Dcontext.StrokeAsync();

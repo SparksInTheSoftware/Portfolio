@@ -54,16 +54,18 @@ namespace Portfolio.Client.Pages
                 }
             }
 
+        private bool onKeyDownHandled = true;
+        private bool OnKeyDownPreventDefault { get { return this.onKeyDownHandled; }  }
+        private bool OnKeyDownStopPropogation { get { return this.onKeyDownHandled; }  }
         private async Task OnKeyDown(KeyboardEventArgs args)
             {
+            this.onKeyDownHandled = false;
             if (args.CtrlKey)
                 {
                 switch (args.Key)
                     {
-                    default:
-                        return;
-
                     case "c":
+                        this.onKeyDownHandled = true;
                         await SerializePortfolioInfos();
                         break;
                     }
@@ -73,13 +75,14 @@ namespace Portfolio.Client.Pages
                 }
             else if (args.AltKey)
                 {
+                switch (args.Key)
+                    {
+                    }
                 }
             else
                 {
                 switch (args.Key)
                     {
-                    default:
-                        return;
                     }
                 }
             }

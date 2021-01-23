@@ -378,7 +378,6 @@ namespace Portfolio.Client.Pages
         Timer randomRectanglesTimer = null;
         private void StartRandomRectangles()
             {
-            int millis = 10;
             this.randomRectanglesTimer = new Timer(RandomRectangle, null, 250, 25);
             }
 
@@ -403,14 +402,16 @@ namespace Portfolio.Client.Pages
                 this._context = await this.canvas.CreateCanvas2DAsync();
                 }
 
-            await this._context.BeginBatchAsync();
             Random random = new Random();
+
             Size margin = new Size() { Width = 25, Height = 25 };
             int width = random.Next(15, 150);
             int height = random.Next(15, 150);
             int x = random.Next(margin.Width, this.canvasSize.Width - (margin.Width + width));
             int y= random.Next(margin.Height, this.canvasSize.Height - (margin.Height + height));
+
             int color = random.Next(0, 0xFFFFFF);
+            await this._context.BeginBatchAsync();
             await this._context.SetFillStyleAsync($"#{color:X6}");
             await this._context.FillRectAsync(x, y, width, height);
             await this._context.EndBatchAsync();
@@ -428,37 +429,46 @@ namespace Portfolio.Client.Pages
             this.startImageFetch = DateTime.Now;
             }
 
+        private bool onKeyDownHandled = false;
+        private bool OnKeyDownPreventDefault { get { return this.onKeyDownHandled; }  }
+        private bool OnKeyDownStopPropogation { get { return this.onKeyDownHandled; }  }
         private async Task OnKeyDown(KeyboardEventArgs args)
             {
+            this.onKeyDownHandled = false;
             if (args.CtrlKey)
                 {
                 switch (args.Key)
                     {
-                    default:
-                        return;
-
                     case "1":
+                        this.onKeyDownHandled = true;
                         ZoomTo(1.00); // 100%
+                        await DrawCanvas();
                         break;
 
                     case "0":
+                        this.onKeyDownHandled = true;
                         FitImageToCanvas();
+                        await DrawCanvas();
                         break;
 
                     case "+":
                     case "=":
+                        this.onKeyDownHandled = true;
                         ZoomIn();
+                        await DrawCanvas();
                         break;
 
                     case "-":
+                        this.onKeyDownHandled = true;
                         ZoomOut();
+                        await DrawCanvas();
                         break;
 
                     case "c":
+                        this.onKeyDownHandled = true;
                         await SerializePortfolioInfo();
                         break;
                     }
-                await DrawCanvas();
                 }
             else if (args.ShiftKey)
                 {
@@ -474,23 +484,28 @@ namespace Portfolio.Client.Pages
                         return;
 
                     case "d":
+                        this.onKeyDownHandled = true;
                         this.displayInfo = !this.displayInfo;
                         await DrawCanvas();
                         break;
 
                     case "a":
+                        this.onKeyDownHandled = true;
                         this.displayAnchor = !this.displayAnchor;
                         await DrawCanvas();
                         break;
 
                     case "f":
+                        this.onKeyDownHandled = true;
                         break;
 
                     case "ArrowLeft":
+                        this.onKeyDownHandled = true;
                         await Previous();
                         break;
 
                     case "ArrowRight":
+                        this.onKeyDownHandled = true;
                         await Next();
                         break;
 
@@ -504,16 +519,20 @@ namespace Portfolio.Client.Pages
                     case "7":
                     case "8":
                     case "9":
+                        this.onKeyDownHandled = true;
                         AddKeyFrame(args.Key[0] - '0');
                         break;
                     case "[":
+                        this.onKeyDownHandled = true;
                         await OnStepBackward();
                         break;
                     case "]":
+                        this.onKeyDownHandled = true;
                         await OnStepForward();
                         break;
 
                     case " ":
+                        this.onKeyDownHandled = true;
                         await OnPlayPause();
                         break;
                     }

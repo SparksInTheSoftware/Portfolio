@@ -102,7 +102,10 @@ namespace Portfolio.Client.Pages
             {
             get
                 {
-                return FullImagePath(this.currentImageIndex);
+                if (afterFirstRender)
+                    return FullImagePath(this.currentImageIndex);
+
+                return String.Empty;
                 }
             }
 
@@ -147,10 +150,12 @@ namespace Portfolio.Client.Pages
             }
 
         private Canvas2DContext _context;
+        private bool afterFirstRender = false;
         protected override async Task OnAfterRenderAsync(bool firstRender)
             {
             if (firstRender)
                 {
+                afterFirstRender = true;
                 AppData.HttpClient = HttpClient;
                 this.portfolioInfo = await AppData.GetPortfolioInfo(Name);
                 this.currentImageIndex = 0;
@@ -161,6 +166,7 @@ namespace Portfolio.Client.Pages
                         this.currentImageIndex = ImageIndex.Value;
                         }
                     }
+                StateHasChanged();
                 await JSRuntime.InvokeVoidAsync("RegisterWindowHandler", DotNetObjectReference.Create<ImageViewer>(this));
                 await OnResize();
                 await this.containerDiv.FocusAsync();

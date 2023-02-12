@@ -1,7 +1,7 @@
 [
   {
     "Name": "2020-01-07 - Seattle",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-07 - Seattle",
+    "RootPath" : "/images",
     "CoverStyle": 2,
     "ImageIndexes": [
       2,
@@ -24,7 +24,7 @@
   },
   {
     "Name": "2020-01-10 - Saint Edward State Park",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-10 - Saint Edward State Park",
+    "RootPath" : "/images",
     "CoverStyle": 1,
     "ImageIndexes": [
       5,
@@ -36,7 +36,6 @@
     "FileNames": [
       "DSC01316.01.jpg",
       "DSC01323.01.jpg",
-      "DSC01324.01.jpg",
       "DSC01334.01.jpg",
       "DSC01336.01.jpg",
       "DSC01338.01.jpg",
@@ -48,7 +47,7 @@
   },
   {
     "Name": "2020-01-11 - Snoqualmie River",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-11 - Snoqualmie River",
+    "RootPath" : "/images",
     "CoverStyle": 1,
     "ImageIndexes": [
       0,
@@ -74,7 +73,7 @@
   },
   {
     "Name": "2020-01-24 - Portland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-24 - Portland",
+    "RootPath" : "/images",
     "CoverStyle": 2,
     "ImageIndexes": [
       1,
@@ -105,7 +104,7 @@
   },
   {
     "Name": "2020-01-25 - Portland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-01-25 - Portland",
+    "RootPath" : "/images",
     "CoverStyle": 2,
     "ImageIndexes": [
       13,
@@ -138,7 +137,7 @@
   },
   {
     "Name": "2020-02-04 - Seattle Asian Art Museum",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-02-04 - Seattle Asian Art Museum",
+    "RootPath" : "/images",
     "CoverStyle": 3,
     "ImageIndexes": [
       0,
@@ -166,7 +165,7 @@
   },
   {
     "Name": "2020-02-16 - Kirkland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-02-16 - Kirkland",
+    "RootPath" : "/images",
     "CoverStyle": 1,
     "ImageIndexes": [
       6,
@@ -192,7 +191,7 @@
   },
   {
     "Name": "2020-03 - Chicago",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-03 - Chicago",
+    "RootPath" : "/images",
     "CoverStyle": 2,
     "ImageIndexes": [
       12,
@@ -221,7 +220,7 @@
   },
   {
     "Name": "2020-04 - Kirkland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-04 - Kirkland",
+    "RootPath" : "/images",
     "CoverStyle": 2,
     "ImageIndexes": [
       0,
@@ -245,7 +244,7 @@
   },
   {
     "Name": "2020-07-25 - Kirkland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-07-25 - Kirkland",
+    "RootPath" : "/images",
     "CoverStyle": 1,
     "ImageIndexes": [
       7,
@@ -268,7 +267,7 @@
   },
   {
     "Name": "2020-08-26 - Seattle",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-08-26 - Seattle",
+    "RootPath" : "/images",
     "CoverStyle": 2,
     "ImageIndexes": [
       1,
@@ -298,7 +297,7 @@
   },
   {
     "Name": "2020-09 - Kirkland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-09 - Kirkland",
+    "RootPath" : "/images",
     "CoverStyle": 1,
     "ImageIndexes": [
       1,
@@ -323,7 +322,7 @@
   },
   {
     "Name": "2020-11-A - Kirkland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-11-A - Kirkland",
+    "RootPath" : "/images",
     "CoverStyle": 3,
     "ImageIndexes": [
       0,
@@ -349,7 +348,7 @@
   },
   {
     "Name": "2020-11-B - Kirkland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-11-B - Kirkland",
+    "RootPath" : "/images",
     "CoverStyle": 1,
     "ImageIndexes": [
       9,
@@ -374,7 +373,7 @@
   },
   {
     "Name": "2020-11-C - Kirkland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-11-C - Kirkland",
+    "RootPath" : "/images",
     "CoverStyle": 2,
     "ImageIndexes": [
       2,
@@ -399,7 +398,7 @@
   },
   {
     "Name": "2020-12-A - Kirkland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-12-A - Kirkland",
+    "RootPath" : "/images",
     "CoverStyle": 3,
     "ImageIndexes": [
       0,
@@ -425,7 +424,7 @@
   },
   {
     "Name": "2020-12-B - Kirkland",
-    "RootPath": "https://www.sparksinthesoftware.com/portfolio/2020-12-B - Kirkland",
+    "RootPath" : "/images",
     "CoverStyle": 3,
     "ImageIndexes": [
       0,

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.JSInterop;
 using Portfolio.Client.Shared;
+using Portfolio.Shared;
 
 namespace Portfolio.Client.Views
     {

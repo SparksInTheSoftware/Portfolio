@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Portfolio.Client.Shared;
 using System.Threading;
+using Portfolio.Shared;
 
 namespace Portfolio.Client.Pages
     {

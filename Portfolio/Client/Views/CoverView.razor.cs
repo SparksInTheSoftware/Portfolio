@@ -56,6 +56,69 @@ namespace Portfolio.Client.Views
         private ElementReference [] imageRefs;
         private Size[] imageNativeSizes;
 
+
+        private int[] coverImageIndexes;
+        private int[] randomImageIndexes;
+        private int curRandomImageIndex;
+        private int[] CoverImageIndexes
+            {
+            get
+                {
+                if (this.coverImageIndexes is null)
+                    {
+                    this.coverImageIndexes = new int[5];
+                    RandomUpdateCoverImage(0);
+                    RandomUpdateCoverImage(1);
+                    RandomUpdateCoverImage(2);
+                    RandomUpdateCoverImage(3);
+                    RandomUpdateCoverImage(4);
+                    }
+                return this.coverImageIndexes;
+                }
+            }
+
+        private void RandomUpdateCoverImage(int coverImageIndex = -1)
+            {
+            Random random = new Random();
+            if (coverImageIndex == -1)
+                {
+                coverImageIndex = random.Next(0, 5);
+                }
+
+            int count = PortfolioInfo.FileNames.Count;
+
+            if (this.curRandomImageIndex >= count)
+                {
+                this.randomImageIndexes= null;
+                }
+
+            if (this.randomImageIndexes is null)
+                {
+                this.randomImageIndexes = new int[count];
+                this.curRandomImageIndex = 0;
+
+                // Initialize the randomImageIndexes to a non-random state
+                // that includes all the possible indexes
+                for (int i = 0; i < count; i++)
+                    {
+                    this.randomImageIndexes[i] = i;
+                    }
+
+                // Do a bunch of random swaps
+                for (int i = 0; i < 2*count; i++)
+                    {
+                    int i1 = random.Next(0, count);
+                    int i2 = random.Next(0, count);
+
+                    // Swap values at indexes i1 and i2
+                    int t = this.randomImageIndexes[i1];
+                    this.randomImageIndexes[i1] = this.randomImageIndexes[i2];
+                    this.randomImageIndexes[i2] = t;
+                    }
+                }
+            this.CoverImageIndexes[coverImageIndex] = this.randomImageIndexes[this.curRandomImageIndex++];
+            }
+
         private Size CoverSize
             {
             get
@@ -283,6 +346,7 @@ namespace Portfolio.Client.Views
             }
 
         private Timer delayDrawTimer;
+        private Timer updateCoverImageTimer;
         protected override async Task OnAfterRenderAsync(bool firstRender)
             {
             if (firstRender)
@@ -298,6 +362,7 @@ namespace Portfolio.Client.Views
                 await this.containerDiv.FocusAsync();
                 await OnResize();
                 this.delayDrawTimer = new Timer(DelayDraw, null, 10, 0);
+                this.updateCoverImageTimer = new Timer(UpdateCoverImageTick, null, 5000, 0);
                 }
             else
                 {
@@ -314,11 +379,19 @@ namespace Portfolio.Client.Views
                 });
             }
 
+        private void UpdateCoverImageTick(object obj)
+            {
+            RandomUpdateCoverImage();
+            StateHasChanged();
+            Random random = new Random();
+            this.updateCoverImageTimer.Change(random.Next(1000, 4000), 0);
+            }
+
         private String FileName(int index)
             {
             if ((this.rectangleAspects != null) && (index < PortfolioInfo?.FileNames?.Count))
                 {
-                int imageIndex = PortfolioInfo.ImageIndexes[index];
+                int imageIndex = CoverImageIndexes[index];
                 String folder = this.aspectFolderNames[(int) this.rectangleAspects[index]];
                 String fileName = PortfolioInfo.FileNames[imageIndex];
 
@@ -385,18 +458,18 @@ namespace Portfolio.Client.Views
                     {
                     if (args.ShiftKey)
                         {
-                        PortfolioInfo.ImageIndexes[index]--;
-                        if (PortfolioInfo.ImageIndexes[index] < 0)
+                        CoverImageIndexes[index]--;
+                        if (CoverImageIndexes[index] < 0)
                             {
-                            PortfolioInfo.ImageIndexes[index] = PortfolioInfo.FileNames.Count - 1;
+                            CoverImageIndexes[index] = PortfolioInfo.FileNames.Count - 1;
                             }
                         }
                     else
                         {
-                        PortfolioInfo.ImageIndexes[index]++;
-                        if (PortfolioInfo.ImageIndexes[index] >= PortfolioInfo.FileNames.Count)
+                        CoverImageIndexes[index]++;
+                        if (CoverImageIndexes[index] >= PortfolioInfo.FileNames.Count)
                             {
-                            PortfolioInfo.ImageIndexes[index] = 0;
+                            CoverImageIndexes[index] = 0;
                             }
                         }
                     StateHasChanged();
@@ -409,7 +482,7 @@ namespace Portfolio.Client.Views
                 int rectIndex = RectangleIndexAt((int) args.OffsetX, (int) args.OffsetY);
                 if (rectIndex != -1)
                     {
-                    this.imageIndex = PortfolioInfo.ImageIndexes[rectIndex];
+                    this.imageIndex = CoverImageIndexes[rectIndex];
                     }
                 }
             }

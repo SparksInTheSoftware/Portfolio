@@ -3,6 +3,10 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Net.Http;
+using Portfolio.Shared;
+using System.Text.Json;
+using System.Collections.Generic;
+using System.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -22,8 +26,18 @@ namespace Portfolio.Server.Controllers
             {
             return $"{dirName}\\{format}\\{name}";
             }
+        [HttpGet]
+        [Route("{name}")]
+        public IActionResult Get(string name)
+            {
+            switch(name) 
+                {
+                case "Portfolios":
+                        return new JsonResult(GetPortfolioInfos());
+                }
+            return NotFound($"{name}");
+            }
 
-        // GET: api/<ValuesController>
         [HttpGet]
         [Route("{format}/{name}")]
         public IActionResult Get(string format, string name)
@@ -164,6 +178,70 @@ namespace Portfolio.Server.Controllers
                 graphics.DrawImage(sourceImage, destinationRect, sourceRect, GraphicsUnit.Pixel);
                 }
             return cropImage;
+            }
+
+        private ImageMetadata[] allMetadata;
+        private ImageMetadata[] GetAllMetadata()
+        {
+            if (this.allMetadata is null)
+                {
+                string json = System.IO.File.ReadAllText(this.dirName + @"\Metadata.json");
+                this.allMetadata = JsonSerializer.Deserialize<ImageMetadata[]>(json);
+                }
+            return this.allMetadata;
+        }
+
+        private PortfolioInfo[] portfolioInfos;
+        public PortfolioInfo [] GetPortfolioInfos()
+            {
+            if (this.portfolioInfos == null)
+                {
+                Dictionary<string, List<ImageMetadata>> dict = new();
+                GetAllMetadata();
+                if (this.allMetadata is not null)
+                    {
+                    foreach (ImageMetadata metadata in this.allMetadata)
+                        {
+                        foreach (string keyword in metadata.Keywords)
+                            {
+                            if ((keyword == "2x3") || (keyword == "1x1"))
+                                continue;
+                                   
+                            List<ImageMetadata> list;
+                            if (!dict.TryGetValue(keyword, out list))
+                                {
+                                list = new List<ImageMetadata>();
+                                dict[keyword] = list;
+                                }
+                            list.Add(metadata);
+                            }
+                        }
+
+                    SortedList<String,PortfolioInfo> portfolioInfoList = new();
+                    foreach ((string key, List<ImageMetadata> metadatas) in dict)
+                        {
+                        PortfolioInfo portfolioInfo = new();
+                        portfolioInfo.RootPath = "images";
+                        portfolioInfo.Name = key;
+                        portfolioInfo.FileNames = new();
+                        portfolioInfo.CoverStyle = (metadatas.Count % 3) + 1;
+                        foreach (ImageMetadata metadata in metadatas)
+                            {
+                            portfolioInfo.FileNames.Add(metadata.FileName);
+                            }
+                        
+                        portfolioInfoList.Add(portfolioInfo.Name, portfolioInfo);
+                        }
+                    this.portfolioInfos = new PortfolioInfo[portfolioInfoList.Count];
+                    int i = 0;
+                    foreach ((string key, PortfolioInfo portfolioInfo) in portfolioInfoList)
+                        {
+                        this.portfolioInfos[i++] = portfolioInfo;
+                        }
+                    }
+                }
+
+            return this.portfolioInfos;
             }
         }
     }

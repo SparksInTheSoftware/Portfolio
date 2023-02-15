@@ -21,7 +21,7 @@ namespace Portfolio.Client
             {
             if (this.portfolioInfos == null)
                 {
-                this.portfolioInfos = await HttpClient.GetFromJsonAsync<PortfolioInfo[]>("portfolios.json");
+                this.portfolioInfos = await HttpClient.GetFromJsonAsync<PortfolioInfo[]>("images/Portfolios");
                 }
 
             return this.portfolioInfos;

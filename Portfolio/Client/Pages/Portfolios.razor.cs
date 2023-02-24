@@ -49,10 +49,6 @@ namespace Portfolio.Client.Pages
         [JSInvokable]
         public async Task OnResize()
             {
-            foreach (var coverView in this.coverViews)
-                {
-                await coverView.OnResize();
-                }
             }
 
         private bool onKeyDownHandled = true;

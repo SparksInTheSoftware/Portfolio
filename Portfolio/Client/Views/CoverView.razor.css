@@ -1,5 +1,113 @@
-﻿.hidden
+﻿:root
+{
+    --cover-inset: 5px;
+    --image-padding: 5px;
+}
+
+.hidden
 {
     display: none;
     visibility: hidden;
+}
+
+.cover
+{
+    display: grid;
+    container-type: size;
+    height: 100cqh;
+    inset: var(--cover-inset);
+}
+
+.cover-style-1
+{
+    min-width: 100cqh;
+    background-color: blue;
+}
+
+.cover-style-2
+{
+    min-width: calc(1.5*100cqh);
+    background-color: green;
+}
+
+.cover-style-3
+{
+    min-width: calc(1.2*100cqh);
+    background-color: red;
+}
+
+.columns-2auto
+{
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+.columns-3auto
+{
+    display: grid;
+    grid-template-columns: auto auto auto;
+}
+
+.rows-2equal
+{
+    display: grid;
+    grid-template-rows: calc(100cqh / 2) calc(100cqh / 2);
+    height: 100cqh;
+}
+
+.rows-3equal
+{
+    display: grid;
+    --row-height: calc(100cqh / 3);
+    grid-template-rows: var(--row-height) var(--row-height) var(--row-height)
+    height: 100cqh;
+}
+
+.rows-3-2
+{
+    display: grid;
+    grid-template-rows: calc(3*100cqh / 5) calc(2*100cqh / 5);
+    height: 100cqh;
+}
+
+.rows-2-3
+{
+    display: grid;
+    grid-template-rows: calc(2*100cqh / 5) calc(3*100cqh / 5);
+    height: 100cqh;
+}
+
+.cover img
+{
+    object-fit: contain;
+}
+
+.height-one-half
+{
+    height: calc(100cqh / 2);
+}
+.height-one-third
+{
+    height: calc(100cqh/3);
+}
+
+.height-two-fifths
+{
+    height: calc(2*100cqh/5);
+}
+
+.height-three-fifths
+{
+    height: calc(3*100cqh/5);
+}
+
+
+.square
+{
+    aspect-ratio: 1 / 1;
+}
+
+.rect-3x2
+{
+    aspect-ratio: 3 / 2;
 }

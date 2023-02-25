@@ -84,18 +84,8 @@ namespace Portfolio.Client.Views
                 }
             }
 
-        private void RandomUpdateCoverImage(int i = -1, int j = -1)
+        private void RandomUpdateCoverImage(int i, int j)
             {
-            Random random = new Random();
-            if (i == -1)
-                {
-                do
-                    {
-                    i = random.Next(0, 3);
-                    j = random.Next(0, 3);
-                    } while (this.coverImageIndexes[i, j] < 0);
-                }
-
             int count = PortfolioInfo.FileNames.Count;
 
             if (this.curRandomImageIndex >= count)
@@ -118,6 +108,8 @@ namespace Portfolio.Client.Views
                 // Do a bunch of random swaps
                 for (int index = 0; index < 2*count; index++)
                     {
+                    Random random = new Random();
+
                     int i1 = random.Next(0, count);
                     int i2 = random.Next(0, count);
 
@@ -130,21 +122,31 @@ namespace Portfolio.Client.Views
             this.CoverImageIndexes[i,j] = this.randomImageIndexes[this.curRandomImageIndex++];
             }
 
-        private Timer updateCoverImageTimer;
+        private Timer [] updateCoverImageTimers;
         protected override async Task OnAfterRenderAsync(bool firstRender)
             {
             if (firstRender)
                 {
                 await this.coverElement.FocusAsync();
-                this.updateCoverImageTimer = new Timer(UpdateCoverImageTick, null, 5000, 0);
+                this.updateCoverImageTimers = new Timer[9];
+
+                for (int index = 0; index < 9; index++)
+                    {
+                    this.updateCoverImageTimers[index] = new Timer(UpdateCoverImageTick, index, index*1000, 0);
+                    }
                 }
             }
         private void UpdateCoverImageTick(object obj)
             {
-            RandomUpdateCoverImage();
+            int index = (int)obj;
+            int row, column;
+            row = index / 3;
+            column = index % 3;
+
+            RandomUpdateCoverImage(row, column);
             StateHasChanged();
             Random random = new Random();
-            this.updateCoverImageTimer.Change(random.Next(1000, 2000), 0);
+            this.updateCoverImageTimers[index].Change(random.Next(5000,10000), 0);
             }
 
         private string SubFolder(Aspect aspect)

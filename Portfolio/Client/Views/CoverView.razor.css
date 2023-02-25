@@ -21,19 +21,16 @@
 .cover-style-1
 {
     min-width: 100cqh;
-    background-color: blue;
 }
 
 .cover-style-2
 {
     min-width: calc(1.5*100cqh);
-    background-color: green;
 }
 
 .cover-style-3
 {
     min-width: calc(1.2*100cqh);
-    background-color: red;
 }
 
 .columns-2auto
@@ -77,9 +74,11 @@
     height: 100cqh;
 }
 
-.cover img
+.thumbnail
 {
-    object-fit: contain;
+    transition: background-image 1s ease-in-out;
+    border: 2px solid black;
+    background-size: cover;
 }
 
 .height-one-half

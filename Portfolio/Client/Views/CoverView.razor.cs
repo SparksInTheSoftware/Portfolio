@@ -165,7 +165,7 @@ namespace Portfolio.Client.Views
                 String folder = SubFolder(CoverLayout.thumbnailAspects[row, column]);
                 String fileName = PortfolioInfo.FileNames[fileIndex];
 
-                return $"{PortfolioInfo.RootPath}\\{folder}\\{fileName}";
+                return $"{PortfolioInfo.RootPath}/{folder}/{fileName}";
                 }
 
             return "";
@@ -348,7 +348,7 @@ namespace Portfolio.Client.Views
                 Aspect.rect_3x2 => "rect-3x2",
                 _ => "hidden"
                 };
-            return $"{aspect} {CoverLayout.heights[row, column]}";
+            return $"thumbnail {aspect} {CoverLayout.heights[row, column]}";
             }
 
         private int imageIndex = 0;

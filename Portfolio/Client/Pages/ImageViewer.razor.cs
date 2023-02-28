@@ -123,7 +123,7 @@ namespace Portfolio.Client.Pages
             {
                 if (index < this.portfolioInfo?.FileNames?.Count)
                     {
-                    return FullImagePath(AppData.HD ? "full" : "low", index);
+                    return FullImagePath(AppData.HD ? "hd" : "sd", index);
                     }
 
                 return "";

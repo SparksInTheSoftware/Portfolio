@@ -49,9 +49,9 @@ namespace Portfolio.Server.Controllers
                 {
                 switch (format)
                     {
-                    case "full":
+                    case "hd":
                         break;
-                    case "low":
+                    case "sd":
                         Create(format, name,
                             (Image sourceImage) => { return ScaleToFit(sourceImage, 1536, 1024); });
                         break;
@@ -110,7 +110,7 @@ namespace Portfolio.Server.Controllers
         private delegate Bitmap ImageCreator(Image sourceImage);
         private void Create(string format, string name, ImageCreator imageCreator)
             {
-            string sourceFileName = FullPathName("full", name);
+            string sourceFileName = FullPathName("hd", name);
             string destinationFileName = FullPathName(format, name);
             EnsureSubDirectoryExists(format);
             if (System.IO.File.Exists(sourceFileName))

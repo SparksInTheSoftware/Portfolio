@@ -19,6 +19,7 @@ using Microsoft.JSInterop;
 using Portfolio.Client.Shared;
 using System.Threading;
 using Portfolio.Shared;
+using Portfolio.Client.Views;
 
 namespace Portfolio.Client.Pages
     {
@@ -91,7 +92,7 @@ namespace Portfolio.Client.Pages
                 return "000:01";
                 }
             }
-        private string Zoom
+        private string ZoomText
             {
             get
                 {
@@ -199,22 +200,35 @@ namespace Portfolio.Client.Pages
         private double minZoom;
         private bool displayInfo = false;
         private bool displayAnchor = false;
-
+        private Aspect displayAspect;
+        private Rectangle? crop1x1 = null;
+        private Rectangle? crop3x2 = null;
 
         private void ZoomPlus(int delta)
             {
             ZoomTo(this.zoom + ((double) delta / 100.0));
             }
 
-        private async Task ZoomIn()
+        private async Task OnClickZoomIn(MouseEventArgs args)
             {
-            ZoomBy(2.0);
+            await Zoom(true, args.ShiftKey, args.CtrlKey);
+            }
+        private async Task Zoom(bool bigger, bool shiftKey, bool ctrlKey)
+            {
+            double factor = (shiftKey, ctrlKey) switch
+                {
+                    (false, false) => 2.0,
+                    (false, true) => 1.5,
+                    (true, false) => 1.10,
+                    (true, true) => 1.01
+                    };
+            double amount = bigger ? factor : 1.0/factor;
+            ZoomBy(amount);
             await DrawCanvas();
             }
-        private async Task ZoomOut()
+        private async Task OnClickZoomOut(MouseEventArgs args)
             {
-            ZoomBy(0.5);
-            await DrawCanvas();
+            await Zoom(false, args.ShiftKey, args.CtrlKey);
             }
 
         private void ZoomBy(double scale)
@@ -256,7 +270,7 @@ namespace Portfolio.Client.Pages
             this.imageDisplayRect.Offset(offset);
 
             // if zoomed image is bigger than canvas, keep the image on the canvas
-            if (this.imageSizeZoomed.Width >= this.canvasSize.Width)
+            if ((this.displayAspect == Aspect.none) && (this.imageSizeZoomed.Width >= this.canvasSize.Width))
                 {
                 if (this.imageDisplayRect.X > 0)
                     {
@@ -278,6 +292,19 @@ namespace Portfolio.Client.Pages
                     this.imageDisplayRect.Y = -(this.imageDisplayRect.Height - this.canvasSize.Height);
                     }
                 }
+            }
+
+        private Rectangle ImageRectFromDisplayRect(Rectangle displayRect)
+            {
+            Rectangle imageRect = new Rectangle();
+
+            // Shift and scale displayRect to image co-ordinates
+            imageRect.X = (int)((double)(displayRect.X - (this.canvasAnchor.X - this.imageAnchor.X))/this.zoom);
+            imageRect.Y = (int)((double)(displayRect.Y - (this.canvasAnchor.Y - this.imageAnchor.Y))/this.zoom);
+            imageRect.Width = (int)((double)displayRect.Width/this.zoom);
+            imageRect.Height = (int)((double)displayRect.Height/this.zoom);
+
+            return imageRect;
             }
 
         private async Task DrawCanvas()
@@ -316,6 +343,40 @@ namespace Portfolio.Client.Pages
                     await this._context.StrokeAsync();
                     await this._context.EndBatchAsync();
                     }
+
+                if (this.displayAspect != Aspect.none)
+                    {
+                    Rectangle rect;
+                    string color;
+                    
+                    switch (this.displayAspect)
+                        {
+                        case Aspect.square:
+                           {
+                            rect = BiggestCenteredSquare(this.canvasSize.Width, this.canvasSize.Height);
+                            color = "red";
+                            }
+                            break;
+                        case Aspect.rect3x2:
+                           {
+                            rect = BiggestCenteredRect3x2(this.canvasSize.Width, this.canvasSize.Height);
+                            color = "blue";
+                            }
+                            break;
+                        default:
+                            rect = new Rectangle();
+                            color = "";
+                            break;
+                        }
+
+                        await this._context.BeginPathAsync();
+                        await this._context.SetStrokeStyleAsync(color);
+                        await this._context.SetLineWidthAsync(3);
+                        await this._context.RectAsync(rect.X, rect.Y, rect.Width, rect.Height);
+                        await this._context.StrokeAsync();
+                        await this._context.EndBatchAsync();
+                    }
+                    
 
                 if (this.displayInfo)
                     {
@@ -380,6 +441,59 @@ namespace Portfolio.Client.Pages
 
                 StartRandomRectangles();
                 }
+            }
+
+        private void HideCrop()
+            {
+            this.displayAspect = Aspect.none;
+            }
+
+        private async Task GetCropRects()
+            {
+            if ((this.crop1x1 is null) || (this.crop3x2 is null))
+                {
+                string imagePath = FullImagePath("thumbnailInfo", this.currentImageIndex) + ".json";
+                ThumbnailInfo? info = null;
+                try
+                    {
+                    info = await HttpClient.GetFromJsonAsync<ThumbnailInfo>(imagePath);
+                    }
+                catch (HttpRequestException ex)
+                    {
+                    string msg = ex.ToString();
+                    }
+                catch (Exception ex)
+                    {
+                    string msg = ex.ToString();
+                    }
+                if (info is not null)
+                    {
+                    this.crop1x1  = info.CropSquareRectScaledToHeight(this.imageNativeSize.Height);
+                    this.crop3x2  = info.Crop3x2RectScaledToHeight(this.imageNativeSize.Height);
+                    }
+                }
+            if (this.crop1x1 is null)
+                {
+                // Default square crop
+                this.crop1x1 = BiggestCenteredSquare(this.imageNativeSize.Width, this.imageNativeSize.Height);
+                }
+            if (this.crop3x2 is null)
+                {
+                // Default rect 3x2
+                this.crop3x2 = BiggestCenteredRect3x2(this.imageNativeSize.Width, this.imageNativeSize.Height);
+                }
+            }
+        private async Task ShowSquareCrop()
+            {
+            this.displayAspect = Aspect.square;
+            await GetCropRects();
+            FitImageRectangleToCanvas((Rectangle)this.crop1x1);
+            }
+        private async Task Show3x2RectCrop()
+            {
+            this.displayAspect = Aspect.rect3x2;
+            await GetCropRects();
+            FitImageRectangleToCanvas((Rectangle)this.crop3x2);
             }
 
         Timer randomRectanglesTimer = null;
@@ -461,19 +575,22 @@ namespace Portfolio.Client.Pages
                     case "+":
                     case "=":
                         this.onKeyDownHandled = true;
-                        ZoomIn();
-                        await DrawCanvas();
+                        await Zoom(true, false,false);
                         break;
 
                     case "-":
                         this.onKeyDownHandled = true;
-                        ZoomOut();
-                        await DrawCanvas();
+                        await Zoom(false, false,false);
                         break;
 
                     case "c":
                         this.onKeyDownHandled = true;
                         await SerializePortfolioInfo();
+                        break;
+
+                    case "s":
+                        this.onKeyDownHandled = true;
+                        SaveCropRect();
                         break;
                     }
                 }
@@ -541,6 +658,26 @@ namespace Portfolio.Client.Pages
                     case " ":
                         this.onKeyDownHandled = true;
                         await OnPlayPause();
+                        break;
+
+                    case "t":
+                        this.onKeyDownHandled = true;
+                        // Move to the next aspect ratio
+                        switch (this.displayAspect)
+                            {
+                            case Aspect.none:
+                                await ShowSquareCrop();
+                                break;
+                            case Aspect.square:
+                                SaveSquareCropRect();
+                                await Show3x2RectCrop();
+                                break;
+                            case Aspect.rect3x2:
+                                Save3x2CropRect();
+                                HideCrop();
+                                break;
+                            }
+                        await DrawCanvas();
                         break;
                     }
                 }
@@ -922,7 +1059,7 @@ namespace Portfolio.Client.Pages
                 this.zoom = ((double)this.canvasSize.Height) / ((double)rectangle.Height);
                 }
 
-            this.minZoom = this.zoom;
+            this.minZoom = 0.9*this.zoom;
             this.imageSizeZoomed.Width = (int) ((double) this.imageNativeSize.Width * this.zoom);
             this.imageSizeZoomed.Height = (int) ((double) this.imageNativeSize.Height * this.zoom);
 
@@ -961,6 +1098,9 @@ namespace Portfolio.Client.Pages
             {
             DateTime finish = DateTime.Now;
             this.imageLoadTime = finish - this.startImageFetch;
+            this.crop3x2 = null;
+            this.crop1x1 = null;
+            HideCrop();
 
             StopRandomRectangles();
 
@@ -991,6 +1131,69 @@ namespace Portfolio.Client.Pages
                 this.fullScreen = await JSRuntime.InvokeAsync<bool>("IsFullScreen");
                 await DrawCanvas();
                 }
+            }
+        private Rectangle BiggestCenteredSquare(int width, int height)
+            {
+            int x = 0;
+            int y = 0;
+
+            int delta = width - height;
+            if (delta < 0)
+                {
+                y += -delta/2;
+                height = width;
+                }
+            else
+                {
+                x += delta/2;
+                width = height;
+                }
+
+            return new Rectangle(x, y, width, height);
+            }
+        private Rectangle BiggestCenteredRect3x2(int width, int height)
+            {
+            Rectangle rect = new Rectangle(0, 0, width, height);
+
+            if (2*width < height*3)
+                {
+                // Width is max
+                rect.Height = 2*width/3;
+                rect.Y = (height - rect.Height)/2;
+                }
+            else
+                {
+                // Height is max
+                rect.Width = 3*height/2;
+                rect.X = (width - rect.Width)/2;
+                }
+
+
+            return rect;
+            }
+
+        private void SaveSquareCropRect()
+            {
+            this.crop1x1 = ImageRectFromDisplayRect(BiggestCenteredSquare(this.canvasSize.Width, this.canvasSize.Height));
+            }
+        private void Save3x2CropRect()
+            {
+            this.crop3x2 = ImageRectFromDisplayRect(BiggestCenteredRect3x2(this.canvasSize.Width, this.canvasSize.Height));
+            }
+        private async Task SaveCropRect()
+            {
+            ThumbnailInfo info = new ThumbnailInfo();
+
+            info.ImageHeight = this.imageNativeSize.Height;
+            info.CropSquareRect = (Rectangle)this.crop1x1;
+            info.Crop3x2Rect = (Rectangle)this.crop3x2;
+            string imagePath = FullImagePath("thumbnailInfo", this.currentImageIndex) + ".json";
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, imagePath)
+                {
+                Content = System.Net.Http.Json.JsonContent.Create(info)
+                };
+            HttpResponseMessage response = await HttpClient.SendAsync(request);
+            string s = await response.Content.ReadAsStringAsync();
             }
         }
     }

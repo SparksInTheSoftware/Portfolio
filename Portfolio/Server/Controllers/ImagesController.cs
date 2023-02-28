@@ -7,6 +7,7 @@ using Portfolio.Shared;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -62,6 +63,10 @@ namespace Portfolio.Server.Controllers
                         Create(format, name,
                             (Image sourceImage) => { return CropScaleToFit(sourceImage, 768, 512); });
                         break;
+
+                    case "thumbnailInfo":
+                        // The client will assume biggest centered for thumbnail info.
+                        return NotFound($"{format}/{name}");
                     }
                 }
 
@@ -69,14 +74,18 @@ namespace Portfolio.Server.Controllers
                 return NotFound($"{format}/{name}");
 
             var image = System.IO.File.OpenRead(fileName);
-            return File(image, "image/jpeg");
+            string contentType = (format == "thumbnailInfo") ? "text/json" : "image/jpeg";
+            return File(image, contentType);
             }
 
-        // POST api/<ValuesController>
-        [HttpPost]
-        [Route("{format}/{name}")]
-        public void Post(string format, string name, [FromBody] string value)
+        [HttpPut]
+        [Route("thumbnailInfo/{name}")]
+        public void Put(string name, [FromBody] ThumbnailInfo thumbnailInfo)
             {
+            string fileName = FullPathName("thumbnailInfo", name);
+            JsonSerializerOptions options = new() { IgnoreReadOnlyFields = true, IgnoreReadOnlyProperties = true };
+            string jsonString = JsonSerializer.Serialize(thumbnailInfo, options);
+            System.IO.File.WriteAllText(fileName, jsonString);
             }
 
         // DELETE api/<ValuesController>/5

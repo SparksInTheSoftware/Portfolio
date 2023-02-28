@@ -45,9 +45,9 @@
                 <span class="bar-text">@FrameInfo</span>
             </div>
             <div class="left-25px zoom">
-                <span class="oi oi-minus overlay-icon" @onclick="ZoomOut"/>
-                <span class="">@Zoom</span>
-                <span class="oi oi-plus overlay-icon" @onclick="ZoomIn"/>
+                <span class="oi oi-minus overlay-icon" @onclick="OnClickZoomOut"/>
+                <span class="">@ZoomText</span>
+                <span class="oi oi-plus overlay-icon" @onclick="OnClickZoomIn"/>
                 <span class="@fullScreenClass overlay-icon" aria-hidden="true" @onclick="DoFullScreen"> </span>
             </div>
         </div>

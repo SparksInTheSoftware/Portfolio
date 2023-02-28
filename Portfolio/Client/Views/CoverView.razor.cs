@@ -14,7 +14,7 @@ using Portfolio.Shared;
 
 namespace Portfolio.Client.Views
     {
-    enum Aspect { none, square, rect_3x2 };
+    enum Aspect { none, square, rect3x2 };
     record CoverLayout
         {
         public bool rowFirst;
@@ -154,7 +154,7 @@ namespace Portfolio.Client.Views
             return aspect switch
                 {
                     Aspect.square => "1x1",
-                    Aspect.rect_3x2 => "3x2",
+                    Aspect.rect3x2 => "3x2",
                     _ => ""
                     };
             }
@@ -255,7 +255,7 @@ namespace Portfolio.Client.Views
                     thumbnailAspects = new Aspect[3,3]
                         {
                             {Aspect.square, Aspect.square, Aspect.none  },   // First column
-                            {Aspect.rect_3x2, Aspect.rect_3x2, Aspect.rect_3x2  }, // Second column
+                            {Aspect.rect3x2, Aspect.rect3x2, Aspect.rect3x2  }, // Second column
                             {Aspect.none, Aspect.none, Aspect.none },
                         },
                     heights = new string[3,3]
@@ -280,7 +280,7 @@ namespace Portfolio.Client.Views
                     thumbnailAspects = new Aspect[3,3]
                         {
                             {Aspect.square, Aspect.square, Aspect.square  },
-                            {Aspect.rect_3x2, Aspect.rect_3x2, Aspect.none  },
+                            {Aspect.rect3x2, Aspect.rect3x2, Aspect.none  },
                             {Aspect.none, Aspect.none, Aspect.none },
                         },
                     heights = new string[3,3]
@@ -347,7 +347,7 @@ namespace Portfolio.Client.Views
             string aspect = CoverLayout.thumbnailAspects[row, column] switch
                 {
                 Aspect.square => "square",
-                Aspect.rect_3x2 => "rect-3x2",
+                Aspect.rect3x2 => "rect-3x2",
                 _ => "hidden"
                 };
             return $"thumbnail {aspect} {CoverLayout.heights[row, column]}";

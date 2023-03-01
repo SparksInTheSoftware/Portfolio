@@ -353,13 +353,13 @@ namespace Portfolio.Client.Pages
                         {
                         case Aspect.square:
                            {
-                            rect = BiggestCenteredSquare(this.canvasSize.Width, this.canvasSize.Height);
+                            rect = Util.BiggestCenteredSquare(this.canvasSize.Width, this.canvasSize.Height);
                             color = "red";
                             }
                             break;
                         case Aspect.rect3x2:
                            {
-                            rect = BiggestCenteredRect3x2(this.canvasSize.Width, this.canvasSize.Height);
+                            rect = Util.BiggestCenteredRect3x2(this.canvasSize.Width, this.canvasSize.Height);
                             color = "blue";
                             }
                             break;
@@ -475,12 +475,12 @@ namespace Portfolio.Client.Pages
             if (this.crop1x1 is null)
                 {
                 // Default square crop
-                this.crop1x1 = BiggestCenteredSquare(this.imageNativeSize.Width, this.imageNativeSize.Height);
+                this.crop1x1 = Util.BiggestCenteredSquare(this.imageNativeSize.Width, this.imageNativeSize.Height);
                 }
             if (this.crop3x2 is null)
                 {
                 // Default rect 3x2
-                this.crop3x2 = BiggestCenteredRect3x2(this.imageNativeSize.Width, this.imageNativeSize.Height);
+                this.crop3x2 = Util.BiggestCenteredRect3x2(this.imageNativeSize.Width, this.imageNativeSize.Height);
                 }
             }
         private async Task ShowSquareCrop()
@@ -1132,53 +1132,14 @@ namespace Portfolio.Client.Pages
                 await DrawCanvas();
                 }
             }
-        private Rectangle BiggestCenteredSquare(int width, int height)
-            {
-            int x = 0;
-            int y = 0;
-
-            int delta = width - height;
-            if (delta < 0)
-                {
-                y += -delta/2;
-                height = width;
-                }
-            else
-                {
-                x += delta/2;
-                width = height;
-                }
-
-            return new Rectangle(x, y, width, height);
-            }
-        private Rectangle BiggestCenteredRect3x2(int width, int height)
-            {
-            Rectangle rect = new Rectangle(0, 0, width, height);
-
-            if (2*width < height*3)
-                {
-                // Width is max
-                rect.Height = 2*width/3;
-                rect.Y = (height - rect.Height)/2;
-                }
-            else
-                {
-                // Height is max
-                rect.Width = 3*height/2;
-                rect.X = (width - rect.Width)/2;
-                }
-
-
-            return rect;
-            }
 
         private void SaveSquareCropRect()
             {
-            this.crop1x1 = ImageRectFromDisplayRect(BiggestCenteredSquare(this.canvasSize.Width, this.canvasSize.Height));
+            this.crop1x1 = ImageRectFromDisplayRect(Util.BiggestCenteredSquare(this.canvasSize.Width, this.canvasSize.Height));
             }
         private void Save3x2CropRect()
             {
-            this.crop3x2 = ImageRectFromDisplayRect(BiggestCenteredRect3x2(this.canvasSize.Width, this.canvasSize.Height));
+            this.crop3x2 = ImageRectFromDisplayRect(Util.BiggestCenteredRect3x2(this.canvasSize.Width, this.canvasSize.Height));
             }
         private async Task SaveCropRect()
             {

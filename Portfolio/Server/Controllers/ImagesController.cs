@@ -8,6 +8,8 @@ using System.Text.Json;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Portfolio.Shared;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -45,31 +47,10 @@ namespace Portfolio.Server.Controllers
             {
             string fileName = FullPathName(format, name);
 
-            if (!System.IO.File.Exists(fileName))
-                {
-                switch (format)
-                    {
-                    case "hd":
-                        break;
-                    case "sd":
-                        Create(format, name,
-                            (Image sourceImage) => { return ScaleToFit(sourceImage, 1536, 1024); });
-                        break;
-                    case "1x1":
-                        Create(format, name,
-                            (Image sourceImage) => { return CropScaleToFit(sourceImage, 512, 512); });
-                        break;
-                    case "2x3":
-                        Create(format, name,
-                            (Image sourceImage) => { return CropScaleToFit(sourceImage, 768, 512); });
-                        break;
-
-                    case "thumbnailInfo":
-                        // The client will assume biggest centered for thumbnail info.
-                        return NotFound($"{format}/{name}");
-                    }
-                }
-
+            // Can't regenerate the HD file or the thumbnailInfo.
+            if ((format != "hd") && (format != "thumbnailInfo"))
+                Regenerate(format, name);
+            
             if (!System.IO.File.Exists(fileName))
                 return NotFound($"{format}/{name}");
 
@@ -97,9 +78,9 @@ namespace Portfolio.Server.Controllers
         private void EnsureSubDirectoryExists(string dirName)
             {
             string subDirName = FullPathName(dirName);
-            if (!System.IO.Directory.Exists(subDirName))
+            if (!Directory.Exists(subDirName))
                 {
-                DirectoryInfo dirInfo = System.IO.Directory.CreateDirectory(subDirName);
+                DirectoryInfo dirInfo = Directory.CreateDirectory(subDirName);
                 if (dirInfo is not null)
                     {
                     string s = dirInfo.CreationTime.ToString();
@@ -107,20 +88,99 @@ namespace Portfolio.Server.Controllers
                 }
             }
 
-        private delegate Bitmap ImageCreator(Image sourceImage);
-        private void Create(string format, string name, ImageCreator imageCreator)
+        // Create or recreate the file in the specified format from the "hd" version of the file.
+        private void Regenerate(string format, string name)
             {
+            // Regenerate is not called if format is "hd" or "thumbnailInfo".
+
             string sourceFileName = FullPathName("hd", name);
-            string destinationFileName = FullPathName(format, name);
+
+            // Can't generate the requested format if the source does not exist
+            if (!System.IO.File.Exists(sourceFileName))
+                return;
+
+            DateTime sourceLastWriteTime = System.IO.File.GetLastWriteTime(sourceFileName);
+
             EnsureSubDirectoryExists(format);
-            if (System.IO.File.Exists(sourceFileName))
+
+            string generatedFileName = FullPathName(format, name);
+            DateTime generatedFileLastWriteTime = sourceLastWriteTime;
+            if (System.IO.File.Exists(generatedFileName))
+                generatedFileLastWriteTime = System.IO.File.GetLastWriteTime(generatedFileName);
+
+            ThumbnailInfo? thumbnailInfo = null;
+
+            if (format == "1x1" || format == "3x2")
+                {
+                // Check if the thumbnailInfo file has been updated since the thumbnail was last generated
+                string thumbnailInfoFileName = FullPathName("thumbnailInfo", name) + ".json";
+                if (System.IO.File.Exists(thumbnailInfoFileName))
+                    {
+                    DateTime datetime = System.IO.File.GetLastWriteTime(thumbnailInfoFileName);
+                    if (datetime > generatedFileLastWriteTime)
+                        {
+                        generatedFileLastWriteTime = sourceLastWriteTime; // Force the thumbnail to be regenerated.
+                        }
+
+                    string json = System.IO.File.ReadAllText(thumbnailInfoFileName);
+                    thumbnailInfo = JsonSerializer.Deserialize<ThumbnailInfo>(json);
+                    }
+                }
+
+            if (generatedFileLastWriteTime <= sourceLastWriteTime)
                 {
                 Image image = Image.FromFile(sourceFileName);
-                Bitmap bitmap = imageCreator(image);
-                if (bitmap is not null)
+
+                Rectangle sourceRect = new(0, 0, image.Width, image.Height);
+                Size destinationSize = new(0,0);
+
+                if (format == "1x1" || format == "3x2")
                     {
-                    bitmap.Save(destinationFileName, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    if (thumbnailInfo is not null)
+                        {
+                        if (format == "1x1")
+                            {
+                            destinationSize = new Size(512, 512);
+                            sourceRect = thumbnailInfo.CropSquareRectScaledToHeight(image.Height);
+                            }
+                        else
+                            {
+                            destinationSize = new Size(768, 512);
+                            sourceRect = thumbnailInfo.Crop3x2RectScaledToHeight(image.Height);
+                            }
+                        }
+                    else
+                        {
+                        // No thumbnailInfo file... default to the biggest rectangle from the center of the original
+                        if (format == "1x1")
+                            {
+                            destinationSize = new Size(512, 512);
+                            sourceRect = Util.BiggestCenteredSquare(image.Width, image.Height);
+                            }
+                        else
+                            {
+                            destinationSize = new Size(768, 512);
+                            sourceRect = Util.BiggestCenteredRect3x2(image.Width, image.Height);
+                            }
+                        }
                     }
+                else
+                    {
+                    // Must be "SD" at this point.
+                    destinationSize = ScaleToFit(image.Width, image.Height, 1536, 1024);
+                    }
+
+                Create(image, sourceRect, generatedFileName, destinationSize);
+                }
+            }
+
+        private delegate Bitmap ImageCreator(Image sourceImage);
+        private void Create(Image sourceImage, Rectangle sourceRect, string destinationFileName, Size destinationSize)
+            {
+            Bitmap bitmap = CropImage(sourceImage, sourceRect, destinationSize);
+            if (bitmap is not null)
+                {
+                bitmap.Save(destinationFileName, System.Drawing.Imaging.ImageFormat.Jpeg);
                 }
             }
 
@@ -175,13 +235,14 @@ namespace Portfolio.Server.Controllers
                 }
 
             Rectangle sourceRect = new Rectangle(x, y, sourceWidth, sourceHeight);
-            Rectangle destinationRect = new Rectangle(0, 0, width, height);
+            Size destinationSize = new Size(width, height);
 
-            return CropImage(sourceImage, sourceRect, destinationRect);
+            return CropImage(sourceImage, sourceRect, destinationSize);
             }
-        static Bitmap CropImage(Image sourceImage, Rectangle sourceRect, Rectangle destinationRect)
+        static Bitmap CropImage(Image sourceImage, Rectangle sourceRect, Size destinationSize)
             {
-            var cropImage = new Bitmap(destinationRect.Width, destinationRect.Height);
+            var cropImage = new Bitmap(destinationSize.Width, destinationSize.Height);
+            Rectangle destinationRect = new() { X = 0, Y = 0, Size = destinationSize };
             using (var graphics = Graphics.FromImage(cropImage))
                 {
                 graphics.DrawImage(sourceImage, destinationRect, sourceRect, GraphicsUnit.Pixel);

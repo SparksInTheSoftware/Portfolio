@@ -141,12 +141,12 @@ namespace Portfolio.Server.Controllers
                         if (format == "1x1")
                             {
                             destinationSize = new Size(512, 512);
-                            sourceRect = thumbnailInfo.CropSquareRectScaledToHeight(image.Height);
+                            sourceRect = thumbnailInfo.CropTo1x1ScaledToHeight(image.Height);
                             }
                         else
                             {
                             destinationSize = new Size(768, 512);
-                            sourceRect = thumbnailInfo.Crop3x2RectScaledToHeight(image.Height);
+                            sourceRect = thumbnailInfo.CropTo3x2ScaledToHeight(image.Height);
                             }
                         }
                     else

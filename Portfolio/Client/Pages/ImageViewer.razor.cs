@@ -201,8 +201,8 @@ namespace Portfolio.Client.Pages
         private bool displayInfo = false;
         private bool displayAnchor = false;
         private Aspect displayAspect;
-        private Rectangle? crop1x1 = null;
-        private Rectangle? crop3x2 = null;
+        private Rectangle? image1x1Crop = null;
+        private Rectangle? image3x2Crop = null;
 
         private void ZoomPlus(int delta)
             {
@@ -307,6 +307,26 @@ namespace Portfolio.Client.Pages
             return imageRect;
             }
 
+        private Rectangle Canvas1x1CropRect
+            {
+            get
+                {
+                Rectangle rect = Util.BiggestCenteredSquare(this.canvasSize.Width, this.canvasSize.Height);
+                rect.Inflate(new Size(-20, -20));
+                return rect;
+                }
+            }
+
+        private Rectangle Canvas3x2CropRect
+            {
+            get
+                {
+                Rectangle rect = Util.BiggestCenteredRect3x2(this.canvasSize.Width, this.canvasSize.Height);
+                rect.Inflate(new Size(-20, -20));
+                return rect;
+                }
+            }
+
         private async Task DrawCanvas()
             {
             if ((this.imageNativeSize.Width > 0) && (this.imageNativeSize.Height > 0))
@@ -346,35 +366,34 @@ namespace Portfolio.Client.Pages
 
                 if (this.displayAspect != Aspect.none)
                     {
-                    Rectangle rect;
-                    string color;
+                    Rectangle rect = Rectangle.Empty;
+                    string color = "";
                     
                     switch (this.displayAspect)
                         {
                         case Aspect.square:
-                           {
-                            rect = Util.BiggestCenteredSquare(this.canvasSize.Width, this.canvasSize.Height);
+                            {
+                            rect = Canvas1x1CropRect;
                             color = "red";
                             }
                             break;
                         case Aspect.rect3x2:
-                           {
-                            rect = Util.BiggestCenteredRect3x2(this.canvasSize.Width, this.canvasSize.Height);
+                            {
+                            rect = Canvas3x2CropRect;
                             color = "blue";
                             }
                             break;
-                        default:
-                            rect = new Rectangle();
-                            color = "";
-                            break;
                         }
 
+                    if (!rect.IsEmpty)
+                        {
                         await this._context.BeginPathAsync();
                         await this._context.SetStrokeStyleAsync(color);
                         await this._context.SetLineWidthAsync(3);
                         await this._context.RectAsync(rect.X, rect.Y, rect.Width, rect.Height);
                         await this._context.StrokeAsync();
                         await this._context.EndBatchAsync();
+                        }
                     }
                     
 
@@ -446,11 +465,12 @@ namespace Portfolio.Client.Pages
         private void HideCrop()
             {
             this.displayAspect = Aspect.none;
+            FitImageToCanvas();
             }
 
-        private async Task GetCropRects()
+        private async Task GetImageCropRects()
             {
-            if ((this.crop1x1 is null) || (this.crop3x2 is null))
+            if ((this.image1x1Crop is null) || (this.image3x2Crop is null))
                 {
                 string imagePath = FullImagePath("thumbnailInfo", this.currentImageIndex) + ".json";
                 ThumbnailInfo? info = null;
@@ -468,32 +488,31 @@ namespace Portfolio.Client.Pages
                     }
                 if (info is not null)
                     {
-                    this.crop1x1  = info.CropSquareRectScaledToHeight(this.imageNativeSize.Height);
-                    this.crop3x2  = info.Crop3x2RectScaledToHeight(this.imageNativeSize.Height);
+                    this.image1x1Crop  = info.CropTo1x1ScaledToHeight(this.imageNativeSize.Height);
+                    this.image3x2Crop  = info.CropTo3x2ScaledToHeight(this.imageNativeSize.Height);
                     }
                 }
-            if (this.crop1x1 is null)
+            if (this.image1x1Crop is null)
                 {
                 // Default square crop
-                this.crop1x1 = Util.BiggestCenteredSquare(this.imageNativeSize.Width, this.imageNativeSize.Height);
+                this.image1x1Crop = Util.BiggestCenteredSquare(this.imageNativeSize.Width, this.imageNativeSize.Height);
                 }
-            if (this.crop3x2 is null)
+            if (this.image3x2Crop is null)
                 {
-                // Default rect 3x2
-                this.crop3x2 = Util.BiggestCenteredRect3x2(this.imageNativeSize.Width, this.imageNativeSize.Height);
+                this.image3x2Crop = Util.BiggestCenteredRect3x2(this.imageNativeSize.Width, this.imageNativeSize.Height);
                 }
             }
         private async Task ShowSquareCrop()
             {
             this.displayAspect = Aspect.square;
-            await GetCropRects();
-            FitImageRectangleToCanvas((Rectangle)this.crop1x1);
+            await GetImageCropRects();
+            FitImageRectangleToCanvasRectangle((Rectangle)this.image1x1Crop, Canvas1x1CropRect);
             }
         private async Task Show3x2RectCrop()
             {
             this.displayAspect = Aspect.rect3x2;
-            await GetCropRects();
-            FitImageRectangleToCanvas((Rectangle)this.crop3x2);
+            await GetImageCropRects();
+            FitImageRectangleToCanvasRectangle((Rectangle)this.image3x2Crop, Canvas3x2CropRect);
             }
 
         Timer randomRectanglesTimer = null;
@@ -1042,36 +1061,41 @@ namespace Portfolio.Client.Pages
 
         private void FitImageRectangleToCanvas(Rectangle rectangle)
             {
-            if ((rectangle.Width == 0) || (rectangle.Width == 0))
+            Rectangle canvasRect = new(0, 0, this.canvasSize.Width, this.canvasSize.Height);
+            FitImageRectangleToCanvasRectangle(rectangle, canvasRect);
+            this.minZoom = 0.9*this.zoom;
+            }
+        private void FitImageRectangleToCanvasRectangle(Rectangle imageRectangle, Rectangle canvasRectangle)
+            {
+            if ((imageRectangle.Width == 0) || (imageRectangle.Width == 0))
                 return;
 
-            double imageRatio = ((double) this.imageNativeSize.Height) / ((double) this.imageNativeSize.Width);
-            double canvasRatio = ((double) this.canvasSize.Height) / ((double) this.canvasSize.Width);
+            double imageRatio = ((double) imageRectangle.Height) / ((double) imageRectangle.Width);
+            double canvasRatio = ((double) canvasRectangle.Height) / ((double) canvasRectangle.Width);
 
             if (imageRatio < canvasRatio)
                 {
-                // The whole rectangle will fit on the canvas with the width filled
-                this.zoom = ((double)this.canvasSize.Width) / ((double)rectangle.Width);
+                // The whole image rectangle will fit in the canvas rectangle with the width filled
+                this.zoom = ((double)canvasRectangle.Width) / ((double)imageRectangle.Width);
                 }
             else
                 {
-                // The whole image will fit on the canvas with the height filled
-                this.zoom = ((double)this.canvasSize.Height) / ((double)rectangle.Height);
+                // The whole image rectangle will fit in the canvas rectangle with the height filled
+                this.zoom = ((double)canvasRectangle.Height) / ((double)imageRectangle.Height);
                 }
 
-            this.minZoom = 0.9*this.zoom;
             this.imageSizeZoomed.Width = (int) ((double) this.imageNativeSize.Width * this.zoom);
             this.imageSizeZoomed.Height = (int) ((double) this.imageNativeSize.Height * this.zoom);
 
             Rectangle rectangleZoomed = new()
                 {
-                X = (int) ((double) rectangle.X * this.zoom),
-                Y = (int) ((double) rectangle.Y * this.zoom),
-                Width = (int) ((double) rectangle.Width * this.zoom),
-                Height = (int) ((double) rectangle.Height * this.zoom)
+                X = (int) ((double) imageRectangle.X * this.zoom),
+                Y = (int) ((double) imageRectangle.Y * this.zoom),
+                Width = (int) ((double) imageRectangle.Width * this.zoom),
+                Height = (int) ((double) imageRectangle.Height * this.zoom)
                 };
 
-            CenterRectangle(rectangleZoomed);
+            CenterImageRectangleWithinCanvasRectangle(rectangleZoomed, canvasRectangle);
             }
         private void CenterImage()
             {
@@ -1083,14 +1107,19 @@ namespace Portfolio.Client.Pages
                 Height = this.imageSizeZoomed.Height
                 };
 
-            CenterRectangle(rectangle);
+            CenterImageRectangleWithinCanvas(rectangle);
             }
-        private void CenterRectangle(Rectangle rectangle)
+        private void CenterImageRectangleWithinCanvas(Rectangle imageRectangle)
             {
-            this.imageAnchor.X = rectangle.X + rectangle.Width / 2;
-            this.imageAnchor.Y = rectangle.Y + rectangle.Height / 2;
-            this.canvasAnchor.X = this.canvasSize.Width / 2;
-            this.canvasAnchor.Y = this.canvasSize.Height / 2;
+            Rectangle canvasRectangle = new Rectangle(0, 0, this.canvasSize.Width, this.canvasSize.Height);
+            CenterImageRectangleWithinCanvasRectangle(imageRectangle, canvasRectangle);
+            }
+        private void CenterImageRectangleWithinCanvasRectangle(Rectangle imageRectangle, Rectangle canvasRectangle)
+            {
+            this.imageAnchor.X = imageRectangle.X + imageRectangle.Width / 2;
+            this.imageAnchor.Y = imageRectangle.Y + imageRectangle.Height / 2;
+            this.canvasAnchor.X = canvasRectangle.X + canvasRectangle.Width / 2;
+            this.canvasAnchor.Y = canvasRectangle.Y + canvasRectangle.Height / 2;
             ComputeImageDisplayRect();
             }
 
@@ -1098,8 +1127,8 @@ namespace Portfolio.Client.Pages
             {
             DateTime finish = DateTime.Now;
             this.imageLoadTime = finish - this.startImageFetch;
-            this.crop3x2 = null;
-            this.crop1x1 = null;
+            this.image3x2Crop = null;
+            this.image1x1Crop = null;
             HideCrop();
 
             StopRandomRectangles();
@@ -1135,19 +1164,19 @@ namespace Portfolio.Client.Pages
 
         private void SaveSquareCropRect()
             {
-            this.crop1x1 = ImageRectFromDisplayRect(Util.BiggestCenteredSquare(this.canvasSize.Width, this.canvasSize.Height));
+            this.image1x1Crop = ImageRectFromDisplayRect(Canvas1x1CropRect);
             }
         private void Save3x2CropRect()
             {
-            this.crop3x2 = ImageRectFromDisplayRect(Util.BiggestCenteredRect3x2(this.canvasSize.Width, this.canvasSize.Height));
+            this.image3x2Crop = ImageRectFromDisplayRect(Canvas3x2CropRect);
             }
         private async Task SaveCropRect()
             {
             ThumbnailInfo info = new ThumbnailInfo();
 
             info.ImageHeight = this.imageNativeSize.Height;
-            info.CropSquareRect = (Rectangle)this.crop1x1;
-            info.Crop3x2Rect = (Rectangle)this.crop3x2;
+            info.CropSquareRect = (Rectangle)this.image1x1Crop;
+            info.Crop3x2Rect = (Rectangle)this.image3x2Crop;
             string imagePath = FullImagePath("thumbnailInfo", this.currentImageIndex) + ".json";
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, imagePath)
                 {

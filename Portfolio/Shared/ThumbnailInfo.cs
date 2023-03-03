@@ -11,13 +11,13 @@ namespace Portfolio.Shared
         {
         public int ImageHeight { get; set; }
         public Rectangle CropSquareRect { get; set; }
-        public Rectangle CropSquareRectScaledToHeight(int height)
+        public Rectangle CropTo1x1ScaledToHeight(int height)
             {
             return ScaleToHeight(CropSquareRect, height);
             }
 
         public Rectangle Crop3x2Rect { get; set; }
-        public Rectangle Crop3x2RectScaledToHeight(int height)
+        public Rectangle CropTo3x2ScaledToHeight(int height)
             {
             return ScaleToHeight(Crop3x2Rect, height);
             }
